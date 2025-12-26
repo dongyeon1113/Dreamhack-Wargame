@@ -13,7 +13,7 @@
 함수 내부는 반복문을 돌며 사용자 입력값의 각 문자를 변환하고 있습니다.
 
 ![IDA Graph View](./analysis.png)
-*(여기에 IDA 스크린샷을 넣으세요. 그래프 모드에서 핵심 분기점이 보이게 찍으시면 좋습니다)*
+
 
 ### 2.2. Assembly to C Reconstruction (핵심)
 어셈블리 코드를 분석하여 C언어로 복원했습니다.
@@ -22,10 +22,12 @@
 
 **[Assembly Code]**
 ```assembly
-mov     eax, [rsp+arg_0]
-shl     eax, 4
-mov     ecx, [rsp+arg_0]
-shr     ecx, 4
+sar     eax, 4
+movsxd  rcx, [rsp+18h+var_18]
+mov     rdx, [rsp+18h+arg_0]
+movzx   ecx, byte ptr [rdx+rcx]
+shl     ecx, 4
+and     ecx, 0F0h
 or      eax, ecx
 ```
 
@@ -48,6 +50,6 @@ char transform(char input) {
 [solution.c](./solution.c) 파일을 참고하세요.
 
 ## 4. Result
-플래그 추출 성공: `DH{...}`
+플래그 추출 성공: `DH{Br1ll1ant_bit_dr1bble_<<_>>}`
 
 ![Success Screenshot](./flag_success.png)
