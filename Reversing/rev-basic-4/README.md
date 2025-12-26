@@ -3,7 +3,7 @@
 ## 1. Problem Overview
 - **Category:** Reversing
 - **Difficulty:** Level 1
-- **Tool:** IDA Pro, VS Code (C Language)
+- **Tool:** IDA Free, VS Code (C Language)
 - **Description:** 사용자 입력값을 특정 알고리즘으로 변환 후 비교하는 문제. 
   단순 비교가 아닌 비트 연산이 섞인 로직을 분석해야 함.
 
