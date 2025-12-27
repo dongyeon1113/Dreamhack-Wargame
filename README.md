@@ -9,7 +9,7 @@
 
 ## 🛠️ Analysis Methodology
 
-### "No Decompiler" Policy
+### No Decompiler Policy
 본 프로젝트의 모든 결과물은 **디컴파일러(F5)의 의사 코드(Pseudo-code)를 전혀 참고하지 않고 작성**되었습니다. 저는 리버싱의 기초 체력을 위해 다음과 같은 **Manual Reconstruction** 프로세스를 고수합니다.
 
 1.  **Static Analysis (정적 분석)**
