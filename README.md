@@ -1,3 +1,7 @@
+![C](https://img.shields.io/badge/c-%2300599C.svg?style=for-the-badge&logo=c&logoColor=white)
+![Assembly](https://img.shields.io/badge/Assembly-555555?style=for-the-badge&logo=asm&logoColor=white)
+![IDA Pro](https://img.shields.io/badge/IDA%20Pro-2F2F2F?style=for-the-badge&logo=idapro&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 # 🛡️ Dreamhack Wargame Write-ups
 
 > **Deep Dive into Reverse Engineering** > Low-Level Logic Analysis & Code Reconstruction
