@@ -2,24 +2,21 @@
 ![Assembly](https://img.shields.io/badge/Assembly-555555?style=for-the-badge&logo=asm&logoColor=white)
 ![IDA Pro](https://img.shields.io/badge/IDA%20Pro-2F2F2F?style=for-the-badge&logo=idapro&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-# 🛡️ Dreamhack Wargame Write-ups
+# Dreamhack Rev-Engineering Archive
 
-> **Deep Dive into Reverse Engineering** > Low-Level Logic Analysis & Code Reconstruction
-
-## 🧑‍💻 Profile
-* **Affiliation:** Sungkyunkwan Univ. Software (SKKU)
-* **Background:** ROK Army Information Security Specialist (CERT)
-* **Focus:** Reverse Engineering, System Security, Malware Analysis
+**Archived by Kang Dong-yeon** *Sungkyunkwan University, Dept. of Software* *Former ROK Army Information Security Squad (CERT)*
 
 ---
 
-## ⚡ Analysis Philosophy: "Beyond the Decompiler"
+## 🛠 Methodology
 
-이 저장소의 모든 분석 코드는 디컴파일러(Hex-Rays 등)의 의사 코드(Pseudo-code)에 의존하지 않고 작성되었습니다.
+본 리포지토리는 리버싱의 본질적인 이해를 돕기 위해 **Static Analysis(정적 분석)** 위주로 수행된 문제 풀이를 기록합니다.
 
-**"Assembly-Native Analysis"**
-기계어 수준의 흐름 제어와 메모리 접근 방식을 온전히 이해하기 위해, **Raw Assembly**를 직접 분석하여 C 코드로 재구성(Reconstruction)하는 방식을 고수합니다.
+### 🚫 No Decompiler Policy
+편리한 디컴파일 도구(F5) 뒤에 숨겨진 로직을 놓치지 않기 위해, **직접 어셈블리 명령어(Opcode)를 해석**하고 이를 High-Level Language(C/Python)로 포팅하는 훈련을 수행합니다.
 
-* **Manual Decompilation:** 스택 프레임과 레지스터 흐름을 추적하여 원본 로직을 수동 복원
-* **Verification:** 복원된 로직을 기반으로 역연산(Inverse Operation) 스크립트 작성 및 검증
-* **Optimization:** 단순 번역을 넘어선 알고리즘 최적화 및 취약점 원리 분석
+1.  **Analyze:** IDA Graph View를 통한 제어 흐름 및 레지스터 상태 분석
+2.  **Reconstruct:** 어셈블리 로직을 C언어 구조로 1:1 재구현 (변수 타입 및 구조체 추론)
+3.  **Solve:** 복원된 알고리즘의 역연산 로직을 통해 플래그 도출
+
+이러한 **Manual Reconstruction** 과정은 바이너리의 동작 원리를 가장 정확하게 파악하는 방법이자, 리버서로서 갖춰야 할 견고한 기초 체력입니다.
