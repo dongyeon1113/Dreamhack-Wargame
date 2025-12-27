@@ -1,22 +1,36 @@
-![C](https://img.shields.io/badge/c-%2300599C.svg?style=for-the-badge&logo=c&logoColor=white)
-![Assembly](https://img.shields.io/badge/Assembly-555555?style=for-the-badge&logo=asm&logoColor=white)
-![IDA Pro](https://img.shields.io/badge/IDA%20Pro-2F2F2F?style=for-the-badge&logo=idapro&logoColor=white)
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-# Dreamhack Rev-Engineering Archive
+# 🛡️ Dreamhack Wargame Write-ups
 
-**Archived by Kang Dong-yeon** *Sungkyunkwan University, Dept. of Software* *Former ROK Army Information Security Squad (CERT)*
+**성균관대 SW / 육군 정보보호병(CERT) 출신의 리버싱 연구 기록**
+
+이 저장소는 Dreamhack 워게임 문제들을 해결하며 작성한 **분석 보고서 및 소스 코드**를 포함합니다.
+단순히 정답(Flag)을 얻는 것이 아니라, 바이너리의 동작 원리를 **가장 낮은 단계(Low-Level)**에서 이해하는 과정을 기록했습니다.
 
 ---
 
-## 🛠 Methodology
+## 🛠️ Analysis Methodology
 
-본 리포지토리는 리버싱의 본질적인 이해를 돕기 위해 **Static Analysis(정적 분석)** 위주로 수행된 문제 풀이를 기록합니다.
+### "Strictly No Decompiler" Policy
+본 프로젝트의 모든 결과물은 **디컴파일러(F5)의 의사 코드(Pseudo-code)를 전혀 참고하지 않고 작성**되었습니다. 저는 리버싱의 기초 체력을 위해 다음과 같은 **Manual Reconstruction** 프로세스를 고수합니다.
 
-### 🚫 No Decompiler Policy
-편리한 디컴파일 도구(F5) 뒤에 숨겨진 로직을 놓치지 않기 위해, **직접 어셈블리 명령어(Opcode)를 해석**하고 이를 High-Level Language(C/Python)로 포팅하는 훈련을 수행합니다.
+1.  **Static Analysis (정적 분석)**
+    * IDA Graph View와 Disassembly Text만을 사용하여 제어 흐름(Control Flow)을 파악합니다.
+    * 레지스터(`rax`, `rbx`...)의 상태 변화와 스택 프레임(`rsp`, `rbp`) 관리를 추적합니다.
 
-1.  **Analyze:** IDA Graph View를 통한 제어 흐름 및 레지스터 상태 분석
-2.  **Reconstruct:** 어셈블리 로직을 C언어 구조로 1:1 재구현 (변수 타입 및 구조체 추론)
-3.  **Solve:** 복원된 알고리즘의 역연산 로직을 통해 플래그 도출
+2.  **Logic Reconstruction (논리 재구성)**
+    * 분석한 어셈블리 명령어를 기반으로, 원본 C 소스 코드의 로직을 **1:1로 수동 복원**합니다.
+    * 이 과정에서 컴파일러의 최적화 패턴, 변수 타입, 구조체 형태를 역추론합니다.
 
-이러한 **Manual Reconstruction** 과정은 바이너리의 동작 원리를 가장 정확하게 파악하는 방법이자, 리버서로서 갖춰야 할 견고한 기초 체력입니다.
+3.  **Inverse Operation (역연산 구현)**
+    * 복원된 알고리즘의 수학적 특성을 파악하여, 암호화된 데이터를 복구하는 **Keygen/Solver**를 직접 구현합니다.
+
+---
+
+## 📂 Repository Structure
+
+```bash
+├── rev-basic-0/
+│   ├── analysis.asm    # 주요 어셈블리 루틴 분석 주석
+│   └── solver.c        # 재구성한 C 코드 및 솔버
+├── rev-basic-5/
+│   └── solver.c        # "Backward Loop"를 이용한 역연산 로직
+└── README.md
