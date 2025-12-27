@@ -16,7 +16,7 @@
 
 ### 2.2. Assembly to C Reconstruction (핵심)
 어셈블리 코드를 분석하여 C언어로 복원했습니다.
-- 
+- ㄹ
 - 
 
 **[Assembly Code]**
