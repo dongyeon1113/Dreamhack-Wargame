@@ -89,6 +89,12 @@ Target Data    :  [Data_0]     [Data_1]      ...      [Data_21]      [Data_22]
 [solution.c](./solution.c) 파일을 참고하세요.
 
 ## 4. Result
-플래그 추출 성공: 
+플래그 추출 성공: `DH{All_l1fe_3nds_w1th_NULL}`
 
 ![Success Screenshot](./flag_success.png)
+
+## 5. 느낀점
+난이도가 하나 올라갔다고 같은유형이어도 깊이가 달라진것같다. 
+가장기초적인 C언어 문자열의 끝은 NULL값이라는것을 파악하는것이 오래걸렸고, 그 뒤로 역연산을 구현하는것은 할만했다. 
+어렵게 생각하지말고 쉽게 생각하자 가끔은 단순함이 답일때도있다.
+
