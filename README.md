@@ -29,10 +29,9 @@
 
 ```bash
 ├── Reversing/                  # Dreamhack Wargame 문제 풀이 모음
-│   ├── rev-basic-4/
+│   ├── 여러문제들/
 │   │   ├── README.md           # 상세 분석 노트 (Assembly Logic & Strategy)
-│   │   └── solution.c          # 재구성한 C 코드 및 Flag Solver
-│   ├── rev-basic-5/
-│   │   └── solution.c          # 역연산(Inverse Operation) 구현 코드
+│   │   └── solution.c          # 연산(Inverse Operation) 구현 코드
+│   │      
 │   └── ...
 └── README.md                   # 프로젝트 개요 및 분석 방법론 (Methodology)
