@@ -21,7 +21,19 @@
 
 **[Assembly Code]**
 ```assembly
-
+movsxd  rax, [rsp+18h+var_18]
+mov     rcx, [rsp+18h+arg_0]
+movzx   eax, byte ptr [rcx+rax]
+mov     ecx, [rsp+18h+var_18]
+inc     ecx
+movsxd  rcx, ecx
+mov     rdx, [rsp+18h+arg_0]
+movzx   ecx, byte ptr [rdx+rcx]
+add     eax, ecx
+movsxd  rcx, [rsp+18h+var_18]
+lea     rdx, unk_140003000
+movzx   ecx, byte ptr [rdx+rcx]
+cmp     eax, ecx
 ```
 
 **[Reconstructed C Code]**
