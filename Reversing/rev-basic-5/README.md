@@ -38,22 +38,47 @@ cmp     eax, ecx
 
 **[Reconstructed C Code]**
 ```c
-// 제가 복원한 로직입니다.
-Bool check(char* input,char* data)
+/*
+ * 함수: check
+ * ----------------------------
+ * 어셈블리 분석을 통해 재구성한 입력값 검증 로직입니다.
+ * 인접한 두 문자의 합을 데이터 배열과 대조합니다.
+ */
+Bool check(char* input, char* data)
 {
-  for (int i=0; i<23; i++)
+    // 총 23회 반복
+    for (int i = 0; i < 23; i++)
     {
-      if ((input[i]+input[i+1])==data[i])// 인접한 두 문자의 합을 기존의 데이터와 한 글자씩 비교
+        // [검증 로직]
+        // 현재 글자(input[i])와 다음 글자(input[i+1])를 더해서 비교
+        // 마지막 루프(i=22)에서는 input[23]인 NULL(0)이 더해짐
+        //      즉, input[22] + 0 == data[22] 가 성립함
+        if ((input[i] + input[i+1]) == data[i])
         {
             continue;
         }
-      else
+        else
         {
-            return False;
+            return False; // 검증 실패
         }
     }
-  return True;
+
+    return True; // 모든 조건 통과
 }
+```
+
+**[분석을 표로나타낸것]**
+```
+Loop Index (i) :     0            1          ...         21             22 (Last)
+-----------------------------------------------------------------------------------
+Current Char   : [Input_0]    [Input_1]      ...     [Input_21]     [Input_22]
+(Input[i])           ➕            ➕                     ➕              ➕
+Next Char      : [Input_1]    [Input_2]      ...     [Input_22]     [  NULL  ] 
+(Input[i+1])                                                          (0x00)
+                     ⬇️            ⬇️                     ⬇️              ⬇️
+Comparison     :     ==            ==                     ==              ==
+Target Data    :  [Data_0]     [Data_1]      ...      [Data_21]      [Data_22]
+(Hex Value)       (0xAD)       (0xD8)                 (0x98)         (0x4C)
 ```
 
 ## 3. Solution (풀이 과정)
