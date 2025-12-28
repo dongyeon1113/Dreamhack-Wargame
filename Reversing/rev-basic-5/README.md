@@ -16,8 +16,8 @@
 
 ### 2.2. Assembly to C Reconstruction (핵심)
 어셈블리 코드를 분석하여 C언어로 복원했습니다.
-- ~~
-- 
+- 인접한 두 문자의 합(input[i] + input[i+1])을 기존에 가지고있는 data[i]와 비교하여 검증하는 로직을 식별했습니다.
+- 문자열 끝이 **NULL(0)**임을 이용해, 마지막 글자부터 역순으로 추론하는 Backward Solver를 구현하여 해결했습니다.
 
 **[Assembly Code]**
 ```assembly
