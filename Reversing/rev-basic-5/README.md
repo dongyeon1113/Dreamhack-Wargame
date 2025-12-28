@@ -38,7 +38,22 @@ cmp     eax, ecx
 
 **[Reconstructed C Code]**
 ```c
-
+// 제가 복원한 로직입니다.
+Bool check(char* input,char* data)
+{
+  for (int i=0; i<23; i++)
+    {
+      if ((input[i]+input[i+1])==data[i])// 인접한 두 문자의 합을 기존의 데이터와 한 글자씩 비교
+        {
+            continue;
+        }
+      else
+        {
+            return False;
+        }
+    }
+  return True;
+}
 ```
 
 ## 3. Solution (풀이 과정)
