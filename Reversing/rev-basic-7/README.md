@@ -83,7 +83,10 @@ bool check(char* input, char* data, int len)
 ## 3. Solution (풀이 과정)
 정적 분석을 통해 파악한 암호화 루틴은 Input -> ROL -> XOR -> Data 순서로 진행됩니다. 따라서 원본 플래그(Input)를 복구하기 위해서는 연산 순서를 역순으로 뒤집고, 각 연산의 역함수(Inverse Function)를 적용해야 합니다. ex) ROL대신 ROR적용
 
-암호화와 복호화의 흐름을 비교하면 다음과 같습니다.Encryption (암호화):$$Input \xrightarrow{ROL (Left)} \text{Temp} \xrightarrow{XOR} Data$$Decryption (복호화):$$Data \xrightarrow{XOR} \text{Temp} \xrightarrow{ROR (Right)} Input$$3.2. Detailed StepsStep 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이터(Data)에 인덱스(i)를 다시 XOR 합니다.Step 2 (Rotate 복구): ROL(왼쪽 회전)의 역연산은 ROR(오른쪽 회전) 이므로, Step 1의 결과를 (i & 7)만큼 오른쪽으로 회전시킵니다.위 로직을 바탕으로 Python/C언어 Solver 스크립트를 작성하여 해결했습니다.
+./inverse_logic_flow.png
+
+Step 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이터(Data)에 인덱스(i)를 다시 XOR 합니다.
+Step 2 (Rotate 복구): ROL(왼쪽 회전)의 역연산은 ROR(오른쪽 회전) 이므로, Step 1의 결과를 (i & 7)만큼 오른쪽으로 회전시킵니다.
 
 ### Full Solver Code
 [solution.c](./solution.c) 파일을 참고하세요.
