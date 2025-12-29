@@ -20,71 +20,68 @@
 
 
 ### 2.2. Assembly to C Reconstruction (핵심)
-어셈블리 코드를 분석하여 C언어로 복원했습니다.
-- 우선 인덱스와 7을 AND연산 하여 회전횟수를 구합니다.
-- 그 결과값을 입력받은 문자와 ROL연산을 수행한 후 XOR 연산하여 data와 비교합니다.
+분석한 어셈블리 코드를 바탕으로 C언어 의사 코드(Pseudo-code)로 복원했습니다. 핵심 로직은 **입력 문자를 (i & 7)만큼 ROL 회전시킨 후, 인덱스(i)와 XOR 연산하여 비교**하는 과정입니다.
 
 **[Assembly Code]**
 ```assembly
-mov     eax, [rsp+18h+var_18]
-and     eax, 7
+mov     eax, [rsp+18h+var_18]   ; i (index) 값을 가져옴
+and     eax, 7                  ; i & 7 (회전 횟수 계산)
 movsxd  rcx, [rsp+18h+var_18]
-mov     [rsp+18h+var_10], rcx
-mov     rdx, [rsp+18h+arg_0]
-movzx   ecx, al
+mov     [rsp+18h+var_10], rcx   ; (메모리 정리 과정)
+mov     rdx, [rsp+18h+arg_0]    ; 입력값 배열 주소
+movzx   ecx, al                 ; ecx = 회전 횟수 (i & 7)
 mov     rax, [rsp+18h+var_10]
-movzx   eax, byte ptr [rdx+rax]
-rol     al, cl
+movzx   eax, byte ptr [rdx+rax] ; eax = input[i] (1바이트 로드)
+rol     al, cl                  ; ROL (Rotate Left) al, cl
 movzx   eax, al
-xor     eax, [rsp+18h+var_18]
-movsxd  rcx, [rsp+18h+var_18]
-lea     rdx, unk_140003000
-movzx   ecx, byte ptr [rdx+rcx]
-cmp     eax, ecx
+xor     eax, [rsp+18h+var_18]   ; Result ^ i (XOR)
+lea     rdx, unk_140003000      ; 비교할 데이터(data) 주소 로드
+cmp     eax, ecx                ; 최종 비교 (Compare)
 ```
 
 **[Reconstructed C Code]**
 ```c
 
-// ROL (Rotate Left) 구현 함수
-// C언어에는 비트 회전 연산자가 없으므로 Shift(>>, <<)와 OR(|)를 조합해 직접 구현
+#include <stdbool.h> // bool, true, false 사용을 위해
+
+// ROL (Rotate Left) 함수 구현
+// C언어에는 비트 회전 연산자가 없으므로 Shift(<<, >>)와 OR(|)를 조합해 구현
 unsigned char ROL(unsigned char value, int cnt)
 {
-    //8비트 자료형이므로 8번 회전하면 제자리로 돌아옴 (따라서 8로 나눈 나머지만 수행)
-    cnt=cnt%8;
-    /* [예시] 
-       값: 1000 0011 (0x83), 1비트 왼쪽으로 회전 시
+    // 8비트 자료형이므로 8번 회전하면 제자리로 돌아옴
+    cnt = cnt % 8;
+
+    /* [구현 예시] 
+       값: 1000 0011 (0x83), 1비트 왼쪽 회전 시 (ROL 1)
        
-       1. value << cnt : 0000 0110 (왼쪽으로 한 칸 밀어버림)
-       2. value >> (8-cnt) : 0000 0001 (오른쪽으로 일곱 칸 밀어버림)
-       3. OR 연산 (|)  : 0000 0111 (두 결과를 or연산하여 합침 -> 마치 회전한것과 동일한 결과)
+       1. value << cnt      : 0000 0110 (왼쪽으로 밀고, 오른쪽은 0으로 채움)
+       2. value >> (8-cnt)  : 0000 0001 (밀려난 최상위 비트가 맨 뒤로 이동)
+       3. OR 연산 (|)       : 0000 0111 (두 결과를 합침 -> 회전 완료)
     */
     return (value << cnt) | (value >> (8 - cnt));
 }
-Bool check(char* input, char* data)
+
+bool check(char* input, char* data, int len)
 {
-    int len=sizeof(data);
+ 
     for (int i = 0; i < len; i++)
     {
         // [검증 로직]
-        // 입력글자를 인덱스 & 7 만큼 ROL연산 한 후 다시 index와 xor연산 한 후 data와 비교
-        if ((ROL(input[i],(i&7))^i) == data[i])
+        // 1. 입력 문자(input[i])를 (i & 7)만큼 왼쪽으로 회전 (ROL)
+        // 2. 그 결과를 인덱스(i)와 XOR 연산
+        // 3. 미리 정의된 데이터(data[i])와 비교
+        if ( (ROL(input[i], i & 7) ^ i) != data[i] )
         {
-            continue;
-        }
-        else
-        {
-            return False; // 검증 실패
+            return false; // 하나라도 다르면 검증 실패
         }
     }
 
-    return True; // 모든 조건 통과
+    return true; // 모든 검증 통과
 }
 ```
 
 ## 3. Solution (풀이 과정)
-**[분석표]** 를 참고하면 **인접한 두 문자의 합(input[i] + input[i+1])** 을 데이터 배열과 비교하는 방식인것을 알 수 있습니다. 정방향 연산으로는 값을 확정할 수 없어서 모든 C 문자열의 끝은 **NULL(0)** 로 끝난다는 점에 착안하여 **역연산**을 설계했습니다.
-가장 마지막 문자는 input[22] + 0 = data[22]가 성립하므로, 배열의 끝에서부터 시작하여 앞쪽으로 이동하는 역추적(Backtracking) 방식을 사용했습니다. input[i] = data[i] - input[i+1] 공식을 통해 문자열을 순차적으로 복원하여 플래그를 획득할 수 있었습니다.
+
 
 ### Full Solver Code
 [solution.c](./solution.c) 파일을 참고하세요.
