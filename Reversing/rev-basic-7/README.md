@@ -90,7 +90,7 @@ Step 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이�
 Step 2 (Rotate 복구): ROL(왼쪽 회전)의 역연산은 ROR(오른쪽 회전) 이므로, Step 1의 결과를 (i & 7)만큼 오른쪽으로 회전시킵니다.
 
 ### Full Solver Code
-![solution.c](./solution.c) 파일을 참고하세요.
+[solution.c](./solution.c) 파일을 참고하세요.
 
 ## 4. Result
 플래그 추출 성공: `DH{Roll_the_left!_Roll_the_right!}`
