@@ -86,18 +86,17 @@ bool check(char* input, char* data, int len)
 ![역연산로직그림](./inverse_logic_flow.png)
 
 Step 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이터(Data)에 인덱스(i)를 다시 XOR 합니다.
+
 Step 2 (Rotate 복구): ROL(왼쪽 회전)의 역연산은 ROR(오른쪽 회전) 이므로, Step 1의 결과를 (i & 7)만큼 오른쪽으로 회전시킵니다.
 
 ### Full Solver Code
-[solution.c](./solution.c) 파일을 참고하세요.
+![solution.c](./solution.c) 파일을 참고하세요.
 
 ## 4. Result
-플래그 추출 성공: `DH{All_l1fe_3nds_w1th_NULL}`
+플래그 추출 성공: `DH{Roll_the_left!_Roll_the_right!}`
 
 ![Success Screenshot](./flag_success.png)
 
 ## 5. 느낀점
-난이도가 하나 올라갔다고 같은유형이어도 깊이가 달라진것같다. 
-가장기초적인 C언어 문자열의 끝은 NULL값이라는것을 파악하는것이 오래걸렸고, 그 뒤로 역연산을 구현하는것은 할만했다. 
-어렵게 생각하지말고 쉽게 생각하자 가끔은 단순함이 답일때도있다.
+revbasic 시리즈를 거의 다 풀어가는데 뒷번호가 될 수록 어셈블리어가 복잡해진다. 아직 어셈블리어를 읽는데 미숙하다. 숲을 먼저보고 나무를 보자. 핵심로직인 rol이나 xor연산은 잘 파악해서 c로 재구성했지만 메모리 정리과정을 나타내는 어셈블리어에서 낚여서 좀 고생했다. 이런일이 없도록 x64dbg와 같은 동적분석tool을 도입하는것을 고려해봐야겠다.
 
