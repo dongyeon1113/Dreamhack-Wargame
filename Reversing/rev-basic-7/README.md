@@ -21,20 +21,22 @@
 
 ### 2.2. Assembly to C Reconstruction (핵심)
 어셈블리 코드를 분석하여 C언어로 복원했습니다.
-- 입력값의 각 문자를 ROL
-- 문자열 끝이 **NULL(0)**임을 이용해, 마지막 글자부터 역순으로 추론하는 Backward Solver를 구현하여 해결했습니다.
+- 우선 인덱스와 7을 AND연산 하여 회전횟수를 구합니다.
+- 그 결과값을 입력받은 문자와 ROL연산을 수행한 후 XOR 연산하여 data와 비교합니다.
 
 **[Assembly Code]**
 ```assembly
-movsxd  rax, [rsp+18h+var_18]
-mov     rcx, [rsp+18h+arg_0]
-movzx   eax, byte ptr [rcx+rax]
-mov     ecx, [rsp+18h+var_18]
-inc     ecx
-movsxd  rcx, ecx
+mov     eax, [rsp+18h+var_18]
+and     eax, 7
+movsxd  rcx, [rsp+18h+var_18]
+mov     [rsp+18h+var_10], rcx
 mov     rdx, [rsp+18h+arg_0]
-movzx   ecx, byte ptr [rdx+rcx]
-add     eax, ecx
+movzx   ecx, al
+mov     rax, [rsp+18h+var_10]
+movzx   eax, byte ptr [rdx+rax]
+rol     al, cl
+movzx   eax, al
+xor     eax, [rsp+18h+var_18]
 movsxd  rcx, [rsp+18h+var_18]
 lea     rdx, unk_140003000
 movzx   ecx, byte ptr [rdx+rcx]
@@ -43,22 +45,30 @@ cmp     eax, ecx
 
 **[Reconstructed C Code]**
 ```c
-/*
- * 함수: check
- * ----------------------------
- * 어셈블리 분석을 통해 재구성한 입력값 검증 로직입니다.
- * 인접한 두 문자의 합을 데이터 배열과 대조합니다.
- */
+
+// ROL (Rotate Left) 구현 함수
+// C언어에는 비트 회전 연산자가 없으므로 Shift(>>, <<)와 OR(|)를 조합해 직접 구현
+unsigned char ROL(unsigned char value, int cnt)
+{
+    //8비트 자료형이므로 8번 회전하면 제자리로 돌아옴 (따라서 8로 나눈 나머지만 수행)
+    cnt=cnt%8;
+    /* [예시] 
+       값: 1000 0011 (0x83), 1비트 왼쪽으로 회전 시
+       
+       1. value << cnt : 0000 0110 (왼쪽으로 한 칸 밀어버림)
+       2. value >> (8-cnt) : 0000 0001 (오른쪽으로 일곱 칸 밀어버림)
+       3. OR 연산 (|)  : 0000 0111 (두 결과를 or연산하여 합침 -> 마치 회전한것과 동일한 결과)
+    */
+    return (value << cnt) | (value >> (8 - cnt));
+}
 Bool check(char* input, char* data)
 {
-    // 총 23회 반복
-    for (int i = 0; i < 23; i++)
+    int len=sizeof(data);
+    for (int i = 0; i < len; i++)
     {
         // [검증 로직]
-        // 현재 글자(input[i])와 다음 글자(input[i+1])를 더해서 비교
-        // 마지막 루프(i=22)에서는 input[23]인 NULL(0)이 더해짐
-        //      즉, input[22] + 0 == data[22] 가 성립함
-        if ((input[i] + input[i+1]) == data[i])
+        // 입력글자를 인덱스 & 7 만큼 ROL연산 한 후 다시 index와 xor연산 한 후 data와 비교
+        if ((ROL(input[i],(i&7))^i) == data[i])
         {
             continue;
         }
@@ -70,20 +80,6 @@ Bool check(char* input, char* data)
 
     return True; // 모든 조건 통과
 }
-```
-
-**[분석표]**
-```
-Loop Index (i) :     0            1          ...         21             22 (Last)
------------------------------------------------------------------------------------
-Current Char   : [Input_0]    [Input_1]      ...     [Input_21]     [Input_22]
-(Input[i])           ➕            ➕                     ➕              ➕
-Next Char      : [Input_1]    [Input_2]      ...     [Input_22]     [  NULL  ] 
-(Input[i+1])                                                          (0x00)
-                     ⬇️            ⬇️                     ⬇️              ⬇️
-Comparison     :     ==            ==                     ==              ==
-Target Data    :  [Data_0]     [Data_1]      ...      [Data_21]      [Data_22]
-(Hex Value)       (0xAD)       (0xD8)                 (0x98)         (0x4C)
 ```
 
 ## 3. Solution (풀이 과정)
