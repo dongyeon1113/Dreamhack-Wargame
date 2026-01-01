@@ -4,103 +4,67 @@
 - **Category:** Reversing
 - **Difficulty:** Level 1
 - **Tool:** IDA Free, VS Code (C Language), Ubuntu 24.04.1 LTS
-- **Description:** 랜덤으로 입력되는 값과 사용자의 입력을 xor 연산하여 기존에 준비되어있는 string과 비교하는 문제
+- **Description:** 프로그램에서 랜덤으로 생성한 값과 사용자가 입력한 값을 XOR 연산하고, 그 결과를 내부의 특정 문자열과 비교하는 문제
 
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Main Logic Finding
-`Congrats!` 문자열을 Xref하여 메인함수를 찾았습니다.
-해당 함수를 분석한 결과, 우선 get_rand_num함수를 통해 16진수 수를 받아와 10진수로 입력받은 수와 xor연산을 합니다.
-그 결과를 snprintf함수를 사용해 s문자열에 저장하는것을 볼 수 있습니다.
+`Congrats!` 문자열을 Xref하여 메인 함수를 찾았습니다.
+해당 함수를 분석한 결과, 먼저 `get_rand_num` 함수를 통해 생성된 난수와 사용자가 10진수로 입력한 수를 XOR 연산합니다.
+이후 연산 결과를 `snprintf` 함수를 사용하여 문자열 `s`에 저장하는 것을 확인할 수 있습니다.
 
 ![IDA Graph View](./analysis1.png)
 
-아래 Graph View를 보면 cmp [rbp+var4], 7를 통해서 rbp+var4가 index이고 loop count가 7회인 반복문을 시행하고있다는것을 알 수 있습니다.
-loc_143E에서는 복잡해보이지만 rbp+var4가 반복문의 index인것을 안다면 단순히 s1[index]=s[7-index]연산을 수행하고 있습니다.
-7번의 반복문이 끝나게 되면 기존에 준비되어있던 비교 문자열 "a0b4c1d7"과 strncmp함수를 통해 비교합니다.
+아래 Graph View의 `cmp [rbp+var4], 7` 명령어를 통해 `rbp+var4`가 인덱스 역할을 하며, 반복문이 인덱스 0부터 7까지 수행된다는 것을 알 수 있습니다.
+`loc_143E` 블록이 복잡해 보일 수 있으나, `rbp+var4`가 인덱스임을 파악하면 단순히 `s1[index] = s[7-index]` 연산을 수행하고 있음을 알 수 있습니다. 즉, 문자열을 역순으로 재배치하는 과정입니다.
+
+반복문이 종료되면 `strncmp` 함수를 통해 결과 문자열을 하드코딩된 비교 문자열 "a0b4c1d7"과 비교합니다.
 
 ![IDA Graph View](./analysis2.png)
-
-
 ### 2.2. Assembly to C Reconstruction (핵심)
-분석한 어셈블리 코드를 바탕으로 C언어 의사 코드(Pseudo-code)로 복원했습니다. 핵심 로직은 **입력 문자를 (i & 7)만큼 ROL 회전시킨 후, 인덱스(i)와 XOR 연산하여 비교**하는 과정입니다.
+분석한 어셈블리 코드를 바탕으로 C언어 의사 코드(Pseudo-code)로 복원했습니다. 핵심 로직은 **XOR연산을 한 후 문자열로 변환**하는 과정입니다.
 
-**[Assembly Code]**
-```assembly
-mov     eax, [rsp+18h+var_18]   ; i (index) 값을 가져옴
-and     eax, 7                  ; i & 7 (회전 횟수 계산)
-movsxd  rcx, [rsp+18h+var_18]
-mov     [rsp+18h+var_10], rcx   ; (메모리 정리 과정)
-mov     rdx, [rsp+18h+arg_0]    ; 입력값 배열 주소
-movzx   ecx, al                 ; ecx = 회전 횟수 (i & 7)
-mov     rax, [rsp+18h+var_10]
-movzx   eax, byte ptr [rdx+rax] ; eax = input[i] (1바이트 로드)
-rol     al, cl                  ; ROL (Rotate Left) al, cl
-movzx   eax, al
-xor     eax, [rsp+18h+var_18]   ; Result ^ i (XOR)
-lea     rdx, unk_140003000      ; 비교할 데이터(data) 주소 로드
-cmp     eax, ecx                ; 최종 비교 (Compare)
-```
 
 **[Reconstructed C Code]**
 ```c
+void main() {
+    // 랜덤 값 생성 
+    int random_val = get_rand_num(); 
+    int user_input;
 
-#include <stdbool.h> // bool, true, false 사용을 위해
+    // 사용자 입력 (Decimal)
+    scanf("%d", &user_input);
 
-// ROL (Rotate Left) 함수 구현
-// C언어에는 비트 회전 연산자가 없으므로 Shift(<<, >>)와 OR(|)를 조합해 구현
-unsigned char ROL(unsigned char value, int cnt)
-{
-    // 8비트 자료형이므로 8번 회전하면 제자리로 돌아옴
-    cnt = cnt % 8;
+    // XOR 연산 및 문자열 변환
+    int xor_result = random_val ^ user_input;
+    char s[9], s1[9];
+    
+    // xor 결과를 16진수 문자열로 변환하여 s에 저장
+    snprintf(s, 9, "%08x", xor_result);
 
-    /* [구현 예시] 
-       값: 1000 0011 (0x83), 1비트 왼쪽 회전 시 (ROL 1)
-       
-       1. value << cnt      : 0000 0110 (왼쪽으로 밀고, 오른쪽은 0으로 채움)
-       2. value >> (8-cnt)  : 0000 0001 (밀려난 최상위 비트가 맨 뒤로 이동)
-       3. OR 연산 (|)       : 0000 0111 (두 결과를 합침 -> 회전 완료)
-    */
-    return (value << cnt) | (value >> (8 - cnt));
-}
-
-bool check(char* input, char* data, int len)
-{
- 
-    for (int i = 0; i < len; i++)
-    {
-        // [검증 로직]
-        // 1. 입력 문자(input[i])를 (i & 7)만큼 왼쪽으로 회전 (ROL)
-        // 2. 그 결과를 인덱스(i)와 XOR 연산
-        // 3. 미리 정의된 데이터(data[i])와 비교
-        if ( (ROL(input[i], i & 7) ^ i) != data[i] )
-        {
-            return false; // 하나라도 다르면 검증 실패
-        }
+    // 문자열 순서 뒤집기 
+    // IDA 분석: s1[index] = s[7 - index]
+    for (int i = 0; i < 8; i++) {
+        s1[i] = s[7 - i];
     }
+   
 
-    return true; // 모든 검증 통과
+    // 하드코딩된 문자열과 비교
+    if (strncmp(s1, "a0b4c1d7", 8) == 0) {
+        puts("Congrats!"); // 플래그 출력 성공 루틴
+    } else {
+        puts("Wrong...");
+    }
 }
+
 ```
 
 ## 3. Solution (풀이 과정)
-정적 분석을 통해 파악한 암호화 루틴은 Input -> ROL -> XOR -> Data 순서로 진행됩니다. 따라서 원본 플래그(Input)를 복구하기 위해서는 연산 순서를 역순으로 뒤집고, 각 연산의 역함수(Inverse Function)를 적용해야 합니다. ex) ROL대신 ROR적용
-
-![역연산로직그림](./inverse_logic_flow.png)
-
-Step 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이터(Data)에 인덱스(i)를 다시 XOR 합니다.
-
-Step 2 (Rotate 복구): ROL(왼쪽 회전)의 역연산은 ROR(오른쪽 회전) 이므로, Step 1의 결과를 (i & 7)만큼 오른쪽으로 회전시킵니다.
-
-### Full Solver Code
-[solution.c](./solution.c) 파일을 참고하세요.
-
-## 4. Result
-플래그 추출 성공: `DH{Roll_the_left!_Roll_the_right!}`
-
+분석한 로직에 따라 정답을 구하는 식은 Input = random_number ^ 0x7d1c4b0a입니다. 따라서 실행 시 주어지는 랜덤 값만 알면 XOR 연산을 통해 정답을 도출할 수 있습니다.
 ![Success Screenshot](./flag_success.png)
+서버로부터 받은 Random number는 0x7f311f04였으며, 이를 0x7d1c4b0a와 XOR 연산하여 결과값 36525070 (10진수)을 얻었습니다. 이 값을 서버에 입력하여 최종적으로 플래그를 획득했습니다.
 
-## 5. Thoughts
-시리즈의 후반부로 갈수록 어셈블리 코드의 복잡도가 높아짐을 체감한다. 이번 문제에서 ROL과 XOR이라는 핵심 암호화 로직은 성공적으로 파악하여 C언어로 복원했지만, 분석 과정에서 **스택 프레임 초기화 및 메모리 정리**와 같은 점을 실제 로직으로 오인하여 시간을 소모했다.
-모든 어셈블리 명령어를 해석하려 하기보다, 전체적인 흐름을 먼저 파악하는 것의 중요성을 깨달았다. 또한, 정적 분석(Static Analysis)만으로는 메모리 값의 변화를 추적하는 데 한계가 있음을 느꼈다. 앞으로는 **x64dbg와 같은 동적 분석 도구**를 적극 도입하여 좀 더 발전해야겠다.
+## 4. Thoughts
+rev-basic 시리즈를 풀며 특정 문제 유형에만 고착화되어 있었음을 깨달았습니다. 새로운 패턴의 문제에서 어려움을 겪으며, 단순한 풀이 반복보다는 근본적인 실력 향상이 필요함을 느꼈습니다.
+어셈블리 기초 강의를 복습한 후 분석 시야가 넓어진 것을 체감했으며, 이번 문제를 통해 탄탄한 기본기의 중요성을 다시 한번 확인하는 계기가 되었습니다.
 
 
