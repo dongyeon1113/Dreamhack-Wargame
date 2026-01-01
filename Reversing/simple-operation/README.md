@@ -60,7 +60,9 @@ void main() {
 
 ## 3. Solution (풀이 과정)
 분석한 로직에 따라 정답을 구하는 식은 Input = random_number ^ 0x7d1c4b0a입니다. 따라서 실행 시 주어지는 랜덤 값만 알면 XOR 연산을 통해 정답을 도출할 수 있습니다.
+
 ![Success Screenshot](./flag_success.png)
+
 서버로부터 받은 Random number는 0x7f311f04였으며, 이를 0x7d1c4b0a와 XOR 연산하여 결과값 36525070 (10진수)을 얻었습니다. 이 값을 서버에 입력하여 최종적으로 플래그를 획득했습니다.
 
 ## 4. Thoughts
