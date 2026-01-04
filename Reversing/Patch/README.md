@@ -19,7 +19,7 @@
 **GdipDrawLine**함수는 **두 점을 잇는 직선**을 그리는 함수로 연속해서 호출한다면 문제처럼 마구 칠해서 가리는 용도로 쓸 수 있을거라 판단했습니다.
 Reference: **win32api는 프로그램이 윈도우 운영체제(OS)에게 특정 작업(화면 출력, 창 제어, 파일 읽기 등)을 요청할 때 사용하는 공식 함수 인터페이스입니다.**
 
-![FunctionList](./funtionlist.png)
+![FunctionList](./functionlist.png)
 
 ### 2.2. Main Logic Finding & Solution
 **GdipDrawLine** 함수를 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
@@ -38,6 +38,7 @@ Reference: **win32api는 프로그램이 윈도우 운영체제(OS)에게 특정
 아래사진과같이 한 줄로 덧칠하는 것을 확인할 수 있었습니다.
 
 ![debug](./debug.png)
+
 
 
 
