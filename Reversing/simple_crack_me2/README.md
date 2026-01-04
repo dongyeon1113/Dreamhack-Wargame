@@ -31,7 +31,7 @@ s1은 입력문자열이고 4011EF(s1,unk_402068) -> 401263(s1,31) -> 4012B0(s1,
 s1이 여러 암호화 함수들을 거쳐 s2와 비교되는것을 확인했습니다.
 correct를 출력하는 입력값을 알아내기 위해서 각 암호화 함수들을 분석했습니다.
 
-### 4011EF Stack Frame & Register Setup
+### sub_4011EF Stack Frame & Register Setup
 | Register / Memory | Variable Name (내 방식) | Description |
 
 | `rsi` | `unk` | Key string pointer |
@@ -73,12 +73,76 @@ add     [rbp+var_C], 1        ; index++
 conclusion: s1[i] = s1[i] ^ key[index % key_len]
 ```
 
+### sub_401263 Stack Frame & Register Setup
+| Register / Memory | Variable Name (My Analysis) | Description |
+
+| `rdi` | `s1` | Input string pointer |
+
+| `rsi` | `val` | Integer value |
+
+| `[rbp+var_18]` | `s1_ptr` | Saved pointer to input string |
+
+| `[rbp+var_1C]` | `add_val` | The integer value to add |
+
+| `[rbp+var_4]` | `index` | Loop counter (initialized to 0) |
+
+### Assembly Logic 
+**Loop Condition:** Iterate 32 times 
+```assembly
+mov     eax, [rbp+var_4]      ; eax = index
+movsxd  rdx, eax              ; rdx = index 
+mov     rax, [rbp+var_18]     ; rax = s1_ptr
+add     rax, rdx              ; rax = s1_ptr + index
+movzx   ecx, byte ptr [rax]   ; ecx = s1[index] 
+mov     eax, [rbp+var_4]      ; eax = index 
+movsxd  rdx, eax              ; rdx = index
+mov     rax, [rbp+var_18]     ; rax = s1_ptr
+add     rax, rdx              ; rax = s1_ptr + index
+movzx   edx, [rbp+var_1C]     ; edx = add_val 
+add     edx, ecx              ; edx = add_val + s1[index]
+mov     [rax], dl             ; s1[index] = add_val + s1[index]
+add     [rbp+var_4], 1        ; index++
+
+conclusion: s1[i] = s1[i] + add_val
+```
+
+### sub_4012B0 Stack Frame & Register Setup
+| Register / Memory | Variable Name (My Analysis) | Description |
+
+| `rdi` | `s1` | Input string pointer |
+
+| `rsi` | `val` | Integer value |
+
+| `[rbp+var_18]` | `s1_ptr` | Saved pointer to input string |
+
+| `[rbp+var_1C]` | `sub_val` | The integer value to subtract |
+
+| `[rbp+var_4]` | `index` | Loop counter (initialized to 0) |
+
+### Assembly Logic 
+**Loop Condition:** Iterate 32 times 
+```assembly
+mov     eax, [rbp+var_4]      ; eax = index
+movsxd  rdx, eax              ; rdx = index
+mov     rax, [rbp+var_18]     ; rax = s1_ptr
+add     rax, rdx              ; rax = s1_ptr + index
+movzx   eax, byte ptr [rax]   ; eax = s1[index] 
+mov     edx, [rbp+var_4]      ; edx = index
+movsxd  rcx, edx              ; rcx = index
+mov     rdx, [rbp+var_18]     ; rdx = s1_ptr
+add     rdx, rcx              ; rdx = s1_ptr + index 
+sub     al, [rbp+var_1C]      ; al = s1[index] - sub_val 
+mov     [rdx], al             ; s1[index] = s1[index] - sub_val
+add     [rbp+var_4], 1        ; index++
+
+conclusion: s1[i] = s1[i] - sub_val
+```
 
 
 ## 3. Solution (풀이 과정)
 정적 분석을 통해 파악한 암호화 루틴은 Input -> ROL -> XOR -> Data 순서로 진행됩니다. 따라서 원본 플래그(Input)를 복구하기 위해서는 연산 순서를 역순으로 뒤집고, 각 연산의 역함수(Inverse Function)를 적용해야 합니다. ex) ROL대신 ROR적용
 
-![역연산로직그림](./inverse_logic_flow.png)
+
 
 Step 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이터(Data)에 인덱스(i)를 다시 XOR 합니다.
 
