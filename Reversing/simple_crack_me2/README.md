@@ -23,10 +23,8 @@ Reference: pwndbg는 리눅스 터미널 디버거인 GDB(GNU Debugger)를 해�
 ### 2.2 Main Logic Finding
 **Correct!** 성공 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
 
+![idaanalysis](./idaanalysis.png)
 
-
-### 2.2. Assembly to C Reconstruction (핵심)
-분석한 어셈블리 코드를 바탕으로 C언어 의사 코드(Pseudo-code)로 복원했습니다. 핵심 로직은 **입력 문자를 (i & 7)만큼 ROL 회전시킨 후, 인덱스(i)와 XOR 연산하여 비교**하는 과정입니다.
 
 **[Assembly Code]**
 ```assembly
