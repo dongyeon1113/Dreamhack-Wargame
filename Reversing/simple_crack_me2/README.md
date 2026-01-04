@@ -140,6 +140,9 @@ conclusion: s1[i] = s1[i] - sub_val
 
 
 ## 3. Solution (풀이 과정)
+암호화 순서를 분석하여 도출한 역방향 복호화 표입니다.
+암호화와 반대로 복호화를하려면 함수실행 순서도 반대로 연산도 역연산으로 수행해야합니다.
+
 | 순서 | 암호화 흐름 (Forward) | 연산 | $\leftrightarrow$ | 복호화 흐름 (Solver) | 역연산 수행 |
 | :---: | :--- | :---: | :---: | :--- | :---: |
 | **1** | `sub_4011EF` (Key: `unk_402068`) | XOR | $\leftrightarrow$ | **Step 7** (마지막) | **XOR** |
@@ -150,8 +153,6 @@ conclusion: s1[i] = s1[i] - sub_val
 | **6** | `sub_401263` (Val: `243`) | ADD | $\leftrightarrow$ | **Step 2** | **SUB** `243` |
 | **7** | `sub_4011EF` (Key: `unk_402072`) | XOR | $\leftrightarrow$ | **Step 1** (시작) | **XOR** |
 
-암호화와 반대로 복호화를하려면 함수실행 순서도 반대로 연산도 역연산으로 수행해야한다.
-
 ### Full Solver Code
 [solution.c](./solution.c) 파일을 참고하세요.
 
@@ -161,7 +162,6 @@ conclusion: s1[i] = s1[i] - sub_val
 ![Success Screenshot](./flag_success.png)
 
 ## 5. Thoughts
-시리즈의 후반부로 갈수록 어셈블리 코드의 복잡도가 높아짐을 체감한다. 이번 문제에서 ROL과 XOR이라는 핵심 암호화 로직은 성공적으로 파악하여 C언어로 복원했지만, 분석 과정에서 **스택 프레임 초기화 및 메모리 정리**와 같은 점을 실제 로직으로 오인하여 시간을 소모했다.
-모든 어셈블리 명령어를 해석하려 하기보다, 전체적인 흐름을 먼저 파악하는 것의 중요성을 깨달았다. 또한, 정적 분석(Static Analysis)만으로는 메모리 값의 변화를 추적하는 데 한계가 있음을 느꼈다. 앞으로는 **x64dbg와 같은 동적 분석 도구**를 적극 도입하여 좀 더 발전해야겠다.
+
 
 
