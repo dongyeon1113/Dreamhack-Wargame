@@ -7,16 +7,20 @@
 - **Description:** Correct를 출력해내는 사용자 입력값을 찾는 문제
 
 ## 2. Static Analysis (정적 분석)
-### 2.1. Main Logic Finding
-`Correct` 문자열을 Xref하여 메인 검증 함수(`sub_140001000`)를 찾았습니다.
-해당 함수를 분석한 결과, 반복문을 순회하며 아래와 같은 검증 로직을 수행하는 것을 파악했습니다.
+### 2.1. Initial Analysis
+제공된 simple_crack_me2 파일에 확장자가 없어 파일 형식을 식별하기 위해 정적 분석 도구인 DiE (Detect It Easy) 를 사용했습니다. 분석 결과, 해당 파일이 리눅스 실행 파일(ELF 64-bit)임을 확인했습니다.
 
-- Rotate Count 계산: 인덱스(i)와 7을 AND 연산하여 회전 횟수를 구함.
-- ROL (Rotate Left): 입력받은 문자를 위에서 구한 횟수만큼 왼쪽으로 회전.
-- XOR: 회전된 결과값을 다시 인덱스(i)와 XOR 연산.
-- Compare: 최종 연산 결과가 데이터 영역(data)에 저장된 값과 일치하는지 비교.
+Reference: DiE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 상세히 알려주는 도구입니다.
 
-![IDA Graph View](./analysis.png)
+![dieanalysis](./dieanalysis.png)
+
+이후 pwndbg를 사용해 리눅스환경에서 프로그램을 실행하여 동작을 확인했습니다.
+
+![pwndbg](./pwndbg.png)
+
+### 2.2 Main Logic Finding
+**Correct!**성공 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
+
 
 
 ### 2.2. Assembly to C Reconstruction (핵심)
