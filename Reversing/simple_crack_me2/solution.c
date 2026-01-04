@@ -3,7 +3,7 @@
     Author: 강동연
     Date: 2025-01-04
     Description: 
-        [암호화 로직 분석 (Original Logic)]
+        [암호화 로직 분석]
         1. 4011EF (XOR) -> Key: unk_402068
         2. 401263 (ADD) -> Val: 31
         3. 4012B0 (SUB) -> Val: 90
@@ -31,7 +31,7 @@ void solve_4011EF(unsigned char *s2, unsigned char *unk, int s2_len, int unk_len
     }
 }
 
-// [복호화 함수 2] 뺄셈 연산 (Subtraction)
+// [복호화 함수 2] 뺄셈 연산 
 // 원본 코드의 더하기 연산을 상쇄하기 위해 값을 뺌
 void solve_401263(unsigned char *s2, int num, int s2_len)
 {
@@ -41,7 +41,7 @@ void solve_401263(unsigned char *s2, int num, int s2_len)
     }
 }
 
-// [복호화 함수 3] 덧셈 연산 (Addition)
+// [복호화 함수 3] 덧셈 연산 
 // 원본 코드의 빼기 연산을 상쇄하기 위해 값을 더함
 void solve_4012B0(unsigned char *s2, int num, int s2_len)
 {
@@ -74,25 +74,25 @@ int main()
     // 암호화 순서의 정반대로 진행
 
    
-    // 원본: 4011EF(..., unk_402072) -> XOR
+    // 원본: 4011EF(..., unk_402072) XOR -> XOR
     solve_4011EF(s2, unk_402072, len, sizeof(unk_402072));
 
-    // 원본: 401263(..., 243) -> ADD 
+    // 원본: 401263(..., 243) SUB -> ADD 
     solve_401263(s2, 243, len); // 역연산: SUB
 
-    // 원본: 4012B0(..., 77) -> SUB
+    // 원본: 4012B0(..., 77) ADD -> SUB
     solve_4012B0(s2, 77, len);  // 역연산: ADD
 
-    // 원본: 4011EF(..., unk_40206D) -> XOR
+    // 원본: 4011EF(..., unk_40206D) XOR -> XOR
     solve_4011EF(s2, unk_40206D, len, sizeof(unk_40206D));
 
-    // 원본: 4012B0(..., 90) -> SUB
+    // 원본: 4012B0(..., 90) ADD -> SUB
     solve_4012B0(s2, 90, len);  // 역연산: ADD
 
-    // 원본: 401263(..., 31) -> ADD
+    // 원본: 401263(..., 31) SUB -> ADD
     solve_401263(s2, 31, len);  // 역연산: SUB
 
-    // 원본: 4011EF(..., unk_402068) -> XOR
+    // 원본: 4011EF(..., unk_402068) SUB -> XOR
     solve_4011EF(s2, unk_402068, len, sizeof(unk_402068));
     
     // 복호화가 완료된 flag 출력
