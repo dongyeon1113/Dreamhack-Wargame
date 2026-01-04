@@ -8,18 +8,20 @@
 
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Initial Analysis
-제공된 simple_crack_me2 파일에 확장자가 없어 파일 형식을 식별하기 위해 정적 분석 도구인 DiE (Detect It Easy) 를 사용했습니다. 분석 결과, 해당 파일이 리눅스 실행 파일(ELF 64-bit)임을 확인했습니다.
+제공된 simple_crack_me2 파일에 확장자가 없어 파일 형식을 식별하기 위해 정적 분석 도구인 DIE (Detect It Easy) 를 사용했습니다. 분석 결과, 해당 파일이 리눅스 실행 파일(ELF 64-bit)임을 확인했습니다.
 
-Reference: DiE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 상세히 알려주는 도구입니다.
+Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 상세히 알려주는 도구입니다.
 
 ![dieanalysis](./dieanalysis.png)
 
 이후 pwndbg를 사용해 리눅스환경에서 프로그램을 실행하여 동작을 확인했습니다.
 
+Reference: pwndbg는 리눅스 터미널 디버거인 GDB(GNU Debugger)를 해킹과 리버싱에 최적화된 형태로 개조해 주는 강력한 플러그인입니다.
+
 ![pwndbg](./pwndbg.png)
 
 ### 2.2 Main Logic Finding
-**Correct!**성공 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
+**Correct!** 성공 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
 
 
 
