@@ -140,13 +140,17 @@ conclusion: s1[i] = s1[i] - sub_val
 
 
 ## 3. Solution (풀이 과정)
-정적 분석을 통해 파악한 암호화 루틴은 Input -> ROL -> XOR -> Data 순서로 진행됩니다. 따라서 원본 플래그(Input)를 복구하기 위해서는 연산 순서를 역순으로 뒤집고, 각 연산의 역함수(Inverse Function)를 적용해야 합니다. ex) ROL대신 ROR적용
+| 순서 | 암호화 흐름 (Forward) | 연산 | $\leftrightarrow$ | 복호화 흐름 (Solver) | 역연산 수행 |
+| :---: | :--- | :---: | :---: | :--- | :---: |
+| **1** | `sub_4011EF` (Key: `unk_402068`) | XOR | $\leftrightarrow$ | **Step 7** (마지막) | **XOR** |
+| **2** | `sub_401263` (Val: `31`) | ADD | $\leftrightarrow$ | **Step 6** | **SUB** `31` |
+| **3** | `sub_4012B0` (Val: `90`) | SUB | $\leftrightarrow$ | **Step 5** | **ADD** `90` |
+| **4** | `sub_4011EF` (Key: `unk_40206D`) | XOR | $\leftrightarrow$ | **Step 4** | **XOR** |
+| **5** | `sub_4012B0` (Val: `77`) | SUB | $\leftrightarrow$ | **Step 3** | **ADD** `77` |
+| **6** | `sub_401263` (Val: `243`) | ADD | $\leftrightarrow$ | **Step 2** | **SUB** `243` |
+| **7** | `sub_4011EF` (Key: `unk_402072`) | XOR | $\leftrightarrow$ | **Step 1** (시작) | **XOR** |
 
-
-
-Step 1 (XOR 복구): XOR 연산의 역연산은 자기 자신이므로, 데이터(Data)에 인덱스(i)를 다시 XOR 합니다.
-
-Step 2 (Rotate 복구): ROL(왼쪽 회전)의 역연산은 ROR(오른쪽 회전) 이므로, Step 1의 결과를 (i & 7)만큼 오른쪽으로 회전시킵니다.
+암호화와 반대로 복호화를하려면 함수실행 순서도 반대로 연산도 역연산으로 수행해야한다.
 
 ### Full Solver Code
 [solution.c](./solution.c) 파일을 참고하세요.
