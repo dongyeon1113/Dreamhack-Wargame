@@ -33,12 +33,19 @@ correct를 출력하는 입력값을 알아내기 위해서 각 암호화 함수
 
 ### 4011EF Stack Frame & Register Setup
 | Register / Memory | Variable Name (My Analysis) | Description |
+
 | `rsi` | `unk` | Key string pointer |
+
 | `rdi` | `s1` | Input string pointer |
+
 | `[rbp+var_18]` | `s1_ptr` | Saved pointer to input string |
+
 | `[rbp+var_20]` | `key_ptr` | Saved pointer to key string |
+
 | `[rbp+var_8]` | `key_len` | Length of the key string |
+
 | `[rbp+var_C]` | `index` | Loop counter (initialized to 0) |
+
 ### Assembly Logic 
 **Loop Condition:** Iterate 32 times 
 ```assembly
