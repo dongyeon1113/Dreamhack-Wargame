@@ -4,36 +4,42 @@
 - **Category:** Reversing
 - **Difficulty:** Level 2
 - **Tool:** IDA Free
-- **Description:** 가려진 flag가 보이게 어셈블리어를 patch하는 문제
+- **Description:** 가려진 Flag가 보이도록 바이너리를 Patch하는 문제
 
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Initial Analysis
-flag.exe파일을 먼저 실행해보았더니 아래와같이 flag만 덧칠한것처럼 가려져있는것을 볼 수 있었습니다.
-여기서 저는 flag에 덧칠을 하는 함수가 여러번 반복되겠구나라고 추측을 했습니다.
+문제 파일인 flag.exe를 실행해보니, 아래 이미지와 같이 플래그가 있어야 할 위치가 검은색 선들로 덧칠된 것처럼 가려져 있었습니다.
+이 현상을 관찰하고, **플래그 위에 덧칠하는 함수가 반복적으로 호출되고 있을 것이다**이라는 초기 가설을 세웠습니다.
 
-![initialrun](./initialrun)
+![initialrun](./initialrun.png)
 
-flag.exe파일을 ida로 열어서 Strings를 확인해보 win32api가 쓰인것을 알 수 있습니다.
-Reference: win32api는 프로그램이 윈도우 운영체제(OS)에게 일을 시킬 때 사용하는 공식 명령어 세트입니다.
+가설을 검증하기 위해 IDA로 파일을 열어 정적 분석을 시작했습니다. 
+프로그램이 어떤 기능을 사용하는지 파악하고자 Strings 탭을 확인한 결과, 다수의 Win32 API 함수들이 사용된 것을 볼 수 있었습니다.
+함수 목록 중에서 저는 특히 **GdipDrawLine** 이라는 함수에 주목했습니다.
+**GdipDrawLine**함수는 **두 점을 잇는 직선**을 그리는 함수로 연속해서 호출한다면 문제처럼 마구 칠해서 가리는 용도로 쓸 수 있을거라 판단했습니다.
+Reference: **win32api는 프로그램이 윈도우 운영체제(OS)에게 특정 작업(화면 출력, 창 제어, 파일 읽기 등)을 요청할 때 사용하는 공식 함수 인터페이스입니다.**
 
-![FunctionList](./funtionlist)
-
-
-
-
-
-
-![DIE Analysis](./DIEanalysis.png)
-
-이후 Ubuntu 환경에서 프로그램을 실행하여 동작을 확인했습니다.
-
-![LINUX Analysis](./ubuntuanalysis.png)
+![FunctionList](./funtionlist.png)
 
 ### 2.2. Main Logic Finding & Solution
-**Great xD 1 year has passed! The flag is ...** 라는 성공 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
+**GdipDrawLine** 함수를 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
 
-핵심 로직은 다음과 같습니다
-프로그램은 counter(var_4)에 따라 두 가지 경로로 플래그를 생성하는 구조를 가지고 있습니다.
+![sub_7FF68E8D2B80](./sub_7FF68E8D2B80.png)
+
+핵심 로직은 다음과 같습니다. 아래 그림을 보면 **sub_7FF68E8D2B80**함수가 반복적으로 호출되는것을 볼 수 있습니다.
+
+![RepeatedFunctionCall](./RepeatedFunctionCall.png)
+
+**sub_7FF68E8D2B80**이 flag를 가리며 덧칠을 하는 함수라고 판단하고 처음 호출되는 **sub_7FF68E8D2B80**에 breakpoint를 설정하고
+디버깅(f9)해보았습니다.
+
+![breakpoint](./breakpoint.png)
+
+아래사진과같이 한 줄로 덧칠하는 것을 확인할 수 있었습니다.
+
+![debug](./debug.png)
+
+
 
 1. 분기 조건 변경 (cmp [rbp+var_4], 0 -> cmp [rbp+var_4], 5)기존 코드는 counter가 0보다 클 때(jg) 루프로 진입하고, 0 이하일 때 우측 검사 영역으로 분기하여 플래그 획득 경로를 이원화하고 있었습니다. 특정 제약 조건(3조건)을 만족시키기 위해, 기준값을 0에서 5로 변경하여 5보다 클 때만 루프로 진입하도록 패치했습니다.
 
