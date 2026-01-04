@@ -32,7 +32,7 @@ s1이 여러 암호화 함수들을 거쳐 s2와 비교되는것을 확인했습
 correct를 출력하는 입력값을 알아내기 위해서 각 암호화 함수들을 분석했습니다.
 
 ### 4011EF Stack Frame & Register Setup
-| Register / Memory | Variable Name (My Analysis) | Description |
+| Register / Memory | Variable Name (내 방식) | Description |
 
 | `rsi` | `unk` | Key string pointer |
 
