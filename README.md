@@ -1,4 +1,4 @@
-# 🛡️ Dreamhack Wargame Write-ups
+#  Dreamhack Wargame Write-ups
 
 **리버싱 공부 기록**
 
@@ -7,10 +7,10 @@
 
 ---
 
-## 🛠️ Analysis Methodology
+##  Analysis Methodology
 
 ### No Decompiler Policy
-본 프로젝트의 모든 결과물은 **디컴파일러(F5)의 의사 코드(Pseudo-code)를 전혀 참고하지 않고 작성**되었습니다. 저는 리버싱의 기초 체력을 위해 다음과 같은 **Manual Reconstruction** 프로세스를 고수합니다.
+본 프로젝트의 모든 결과물은 **디컴파일러(F5)의 의사 코드(Pseudo-code)를 참고하지 않고 작성**되었습니다. 
 
 1.  **Static Analysis (정적 분석)**
     * IDA Graph View와 Disassembly Text만을 사용하여 제어 흐름(Control Flow)을 파악합니다.
