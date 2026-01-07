@@ -42,10 +42,18 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 ![idaanalysis](./nanosleeppatch.png)
 
 패치 후 실행을 했더니 아래와 같은 결과가 나왔습니다.
+실행 도중 무결성 검사 함수가 동작해서 **assertion failed** 에러가 발생하며 프로그램이 종료되었습니다.  
+즉 프로그램 내부에서 자기 자신의 코드를 스캔하는데 앞서 nanosleep 우회를 위해 바이너리를 패치한 흔적이 감지되어 
+처음 프로그램원본과 다르다고 판단되어 실행을 차단한 것입니다.
 
 ![integritycheck](./integrity_check.png)
 
+무결성 검사 함수인 **integrity_check**함수 자체를 우회하면 **nanosleep 우회**가 막히지 않을거라 판단하여
+아래 **jnz short loc_1339** 를 **jz short loc_1339**로 패치해주었습니다.
 
+![integritypatch](./integrity_checkpatch.png)
+
+패치 후 실행결과입니다.
 
 ## 3. Result
 플래그 추출 성공: `DH{9ce745c0d5faaf29b7aecd1a4a72bc86}`
