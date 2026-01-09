@@ -67,16 +67,16 @@ conclusion: rot[index]=(input[index]+0Dh)&7Fh
 **Loop Condition:** Iterate 65 times 
 ```assembly
 loc_1272:
-mov     eax, 3Fh             		  ;eax=63
-sub     eax, [rbp+var_8]			    ;eax=63-index
-cdqe                              ;Convert Doubleword to Quadword
-lea     rdx, rot				          ;rdx=rot address
-movzx   edx, byte ptr [rax+rdx]	  ;edx=rot[63-index]
-mov     eax, [rbp+var_8]		      ;eax=index
-cdqe                              ;Convert Doubleword to Quadword
-lea     rcx, result				        ;rcx=result address
-mov     [rax+rcx], dl			        ;result[index]=rot[63-index]
-add     [rbp+var_8], 1			      ;index++
+    mov     eax, 3Fh                   ; eax = 63
+    sub     eax, [rbp+var_8]           ; eax = 63 - index
+    cdqe                               ; Convert Doubleword to Quadword
+    lea     rdx, rot                   ; rdx = rot address
+    movzx   edx, byte ptr [rax+rdx]    ; edx = rot[63 - index]
+    mov     eax, [rbp+var_8]           ; eax = index
+    cdqe                               ; Convert Doubleword to Quadword
+    lea     rcx, result                ; rcx = result address
+    mov     [rax+rcx], dl              ; result[index] = rot[63 - index]
+    add     [rbp+var_8], 1             ; index++
 
 conclusion: result[index]=rot[63-index]
 ```
@@ -90,18 +90,18 @@ conclusion: result[index]=rot[63-index]
 **Loop Condition:** Iterate 65 times 
 ```assembly
 loc_12B6:
-mov     eax, [rbp+var_C]		       ;eax=index
-cdqe                               ;Convert Doubleword to Quadword
-lea     rdx, result				         ;rdx=result address
-movzx   eax, byte ptr [rax+rdx]	   ;eax=result[index]
-mov     edx, [rbp+var_10]		       ;edx=[rbp+var_10]=3
-xor     eax, edx				           ;eax=result[index]^3
-mov     ecx, eax				           ;ecx=result[index]^3
-mov     eax, [rbp+var_C]		       ;eax=index
-cdqe                               ;Convert Doubleword to Quadword
-lea     rdx, result2				       ;rdx=result2 address
-mov     [rax+rdx], cl			         ;result2[index]=result[index]^3
-add     [rbp+var_C], 1			       ;index++
+    mov     eax, [rbp+var_C]           ; eax = index
+    cdqe                               ; Convert Doubleword to Quadword
+    lea     rdx, result                ; rdx = result address
+    movzx   eax, byte ptr [rax+rdx]    ; eax = result[index]
+    mov     edx, [rbp+var_10]          ; edx = [rbp+var_10] (Key = 3)
+    xor     eax, edx                   ; eax = result[index] ^ 3
+    mov     ecx, eax                   ; ecx = result[index] ^ 3
+    mov     eax, [rbp+var_C]           ; eax = index
+    cdqe                               ; Convert Doubleword to Quadword
+    lea     rdx, result2               ; rdx = result2 address
+    mov     [rax+rdx], cl              ; result2[index] = result[index] ^ 3
+    add     [rbp+var_C], 1             ; index++
 
 conclusion: result2[index]=result[index]^3
 ```
@@ -113,13 +113,9 @@ conclusion: result2[index]=result[index]^3
 
 | 순서 | 암호화 흐름 (Forward) | 연산 | $\leftrightarrow$ | 복호화 흐름 (Solver) | 역연산 수행 |
 | :---: | :--- | :---: | :---: | :--- | :---: |
-| **1** | `sub_4011EF` (Key: `unk_402068`) | XOR | $\leftrightarrow$ | **Step 7** (마지막) | **XOR** |
-| **2** | `sub_401263` (Val: `31`) | ADD | $\leftrightarrow$ | **Step 6** | **SUB** `31` |
-| **3** | `sub_4012B0` (Val: `90`) | SUB | $\leftrightarrow$ | **Step 5** | **ADD** `90` |
-| **4** | `sub_4011EF` (Key: `unk_40206D`) | XOR | $\leftrightarrow$ | **Step 4** | **XOR** |
-| **5** | `sub_4012B0` (Val: `77`) | SUB | $\leftrightarrow$ | **Step 3** | **ADD** `77` |
-| **6** | `sub_401263` (Val: `243`) | ADD | $\leftrightarrow$ | **Step 2** | **SUB** `243` |
-| **7** | `sub_4011EF` (Key: `unk_402072`) | XOR | $\leftrightarrow$ | **Step 1** (시작) | **XOR** |
+| **1** | `loc_122B(input,rot)` | **ADD -> AND** | $\leftrightarrow$ | **Step 3** (마지막) | **AND -> SUB** |
+| **2** | `loc_1272(rot,result)` | **String Reverse** | $\leftrightarrow$ | **Step 2** | **String Reverse** |
+| **3** | `loc_12B6(result2,result)` | **XOR** | $\leftrightarrow$ | **Step 1** (시작) | **XOR** |
 
 ### Full Solver Code
 [solution.c](./solution.c) 파일을 참고하세요.
