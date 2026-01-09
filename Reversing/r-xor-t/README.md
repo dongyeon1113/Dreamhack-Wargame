@@ -28,116 +28,82 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 **input**으로 입력한 문자열이 총 세 번의 loop를 거쳐서 마지막 비교 문자열 s2와 비교되어
 플래그를 출력하는것을 확인할 수 있었습니다.
 
-input은 입력문자열이고 **loc_122B(input,rot)** -> **loc_1272(rot,result)** -> **loc_12B6(result2,result)** -> **memcmp(result2,s2,64)** 순서대로 진행됩니다.
+input은 입력문자열이고 **loc_122B(input,rot)** -> **loc_1272(rot,result)** -> **loc_12B6(result2,result)** -> **memcmp(result2,s2,65)** 순서대로 진행됩니다.
 
-input이 여러 암호화 함수들을 거쳐 s2와 비교되는것을 확인했습니다.
+input이 여러 암호화 loop들을 거쳐 s2와 비교되는것을 확인했습니다.
 Nice를 출력하는 입력값을 알아내기 위해서 각 암호화 함수들을 분석했습니다.
 
-### sub_4011EF Stack Frame & Register Setup
+### loc_122B Stack Frame & Register Setup
 | Register / Memory | Variable Name (내 방식) | Description |
 
-| `rsi` | `unk` | Key string pointer |
+| `[rbp+var_4]` | `index` | Loop counter (initialized to 0) |
 
-| `rdi` | `s1` | Input string pointer |
+### Assembly Logic 
+**Loop Condition:** Iterate 65 times 
+```assembly
+loc_122B:
+mov     eax, [rbp+var_4]  		    ;eax=index
+cdqe                              ;Convert Doubleword to Quadword
+lea     rdx, input             		;rdx=input address
+movzx   eax, byte ptr [rax+rdx]	  ;eax=input[index]
+add     eax, 0Dh				          ;eax=input[index]+0Dh
+and     eax, 7Fh				          ;eax=(input[index]+0Dh)&7Fh
+mov     ecx, eax				          ;ecx=(input[index]+0Dh)&7Fh
+mov     eax, [rbp+var_4]	      	;eax=index
+cdqe                              ;Convert Doubleword to Quadword (eax -> rax)
+lea     rdx, rot				          ;rdx=rot address
+mov     [rax+rdx], cl			        ;rot[index]=(input[index]+0Dh)&7Fh
+add     [rbp+var_4], 1			      ;index++
 
-| `[rbp+var_18]` | `s1_ptr` | Saved pointer to input string |
+conclusion: rot[index]=(input[index]+0Dh)&7Fh
+```
 
-| `[rbp+var_20]` | `key_ptr` | Saved pointer to key string |
+### loc_1272 Stack Frame & Register Setup
+| Register / Memory | Variable Name (My Analysis) | Description |
 
-| `[rbp+var_8]` | `key_len` | Length of the key string |
+| `[rbp+var_8]` | `index` | Loop counter (initialized to 0) |
+
+### Assembly Logic 
+**Loop Condition:** Iterate 65 times 
+```assembly
+loc_1272:
+mov     eax, 3Fh             		  ;eax=63
+sub     eax, [rbp+var_8]			    ;eax=63-index
+cdqe                              ;Convert Doubleword to Quadword
+lea     rdx, rot				          ;rdx=rot address
+movzx   edx, byte ptr [rax+rdx]	  ;edx=rot[63-index]
+mov     eax, [rbp+var_8]		      ;eax=index
+cdqe                              ;Convert Doubleword to Quadword
+lea     rcx, result				        ;rcx=result address
+mov     [rax+rcx], dl			        ;result[index]=rot[63-index]
+add     [rbp+var_8], 1			      ;index++
+
+conclusion: result[index]=rot[63-index]
+```
+
+### loc_12B6 Stack Frame & Register Setup
+| Register / Memory | Variable Name (My Analysis) | Description |
 
 | `[rbp+var_C]` | `index` | Loop counter (initialized to 0) |
 
 ### Assembly Logic 
-**Loop Condition:** Iterate 32 times 
+**Loop Condition:** Iterate 65 times 
 ```assembly
-mov     eax, [rbp+var_C]      ; eax = index
-movsxd  rdx, eax              ; rdx = index 
-mov     rax, [rbp+var_18]     ; rax = s1_ptr
-add     rax, rdx              ; rax = s1_ptr + index
-movzx   ecx, byte ptr [rax]   ; ecx = s1[index] 
-mov     eax, [rbp+var_C]      ; eax = index
-cdqe                          ; Convert Double to Quad 
-mov     edx, 0                ; edx = 0 
-div     [rbp+var_8]           ; div by key_len
-                              ; Result: rax = 몫, rdx = 나머지 
-mov     rax, [rbp+var_20]     ; rax = key_ptr
-add     rax, rdx              ; rax = key_ptr + remainder
-movzx   edx, byte ptr [rax]   ; edx = key[index % key_len]
-mov     eax, [rbp+var_C]      ; eax = index
-movsxd  rsi, eax              ; rsi = index
-mov     rax, [rbp+var_18]     ; rax = s1_ptr
-add     rax, rsi              ; rax = s1_ptr + index
-xor     edx, ecx              ; edx = key[index % key_len] ^ s1[index] 
-mov     [rax], dl             ; s1[index] = key[index % key_len] ^ s1[index] 
-add     [rbp+var_C], 1        ; index++
+loc_12B6:
+mov     eax, [rbp+var_C]		       ;eax=index
+cdqe                               ;Convert Doubleword to Quadword
+lea     rdx, result				         ;rdx=result address
+movzx   eax, byte ptr [rax+rdx]	   ;eax=result[index]
+mov     edx, [rbp+var_10]		       ;edx=[rbp+var_10]=3
+xor     eax, edx				           ;eax=result[index]^3
+mov     ecx, eax				           ;ecx=result[index]^3
+mov     eax, [rbp+var_C]		       ;eax=index
+cdqe                               ;Convert Doubleword to Quadword
+lea     rdx, result2				       ;rdx=result2 address
+mov     [rax+rdx], cl			         ;result2[index]=result[index]^3
+add     [rbp+var_C], 1			       ;index++
 
-conclusion: s1[i] = s1[i] ^ key[index % key_len]
-```
-
-### sub_401263 Stack Frame & Register Setup
-| Register / Memory | Variable Name (My Analysis) | Description |
-
-| `rdi` | `s1` | Input string pointer |
-
-| `rsi` | `val` | Integer value |
-
-| `[rbp+var_18]` | `s1_ptr` | Saved pointer to input string |
-
-| `[rbp+var_1C]` | `add_val` | The integer value to add |
-
-| `[rbp+var_4]` | `index` | Loop counter (initialized to 0) |
-
-### Assembly Logic 
-**Loop Condition:** Iterate 32 times 
-```assembly
-mov     eax, [rbp+var_4]      ; eax = index
-movsxd  rdx, eax              ; rdx = index 
-mov     rax, [rbp+var_18]     ; rax = s1_ptr
-add     rax, rdx              ; rax = s1_ptr + index
-movzx   ecx, byte ptr [rax]   ; ecx = s1[index] 
-mov     eax, [rbp+var_4]      ; eax = index 
-movsxd  rdx, eax              ; rdx = index
-mov     rax, [rbp+var_18]     ; rax = s1_ptr
-add     rax, rdx              ; rax = s1_ptr + index
-movzx   edx, [rbp+var_1C]     ; edx = add_val 
-add     edx, ecx              ; edx = add_val + s1[index]
-mov     [rax], dl             ; s1[index] = add_val + s1[index]
-add     [rbp+var_4], 1        ; index++
-
-conclusion: s1[i] = s1[i] + add_val
-```
-
-### sub_4012B0 Stack Frame & Register Setup
-| Register / Memory | Variable Name (My Analysis) | Description |
-
-| `rdi` | `s1` | Input string pointer |
-
-| `rsi` | `val` | Integer value |
-
-| `[rbp+var_18]` | `s1_ptr` | Saved pointer to input string |
-
-| `[rbp+var_1C]` | `sub_val` | The integer value to subtract |
-
-| `[rbp+var_4]` | `index` | Loop counter (initialized to 0) |
-
-### Assembly Logic 
-**Loop Condition:** Iterate 32 times 
-```assembly
-mov     eax, [rbp+var_4]      ; eax = index
-movsxd  rdx, eax              ; rdx = index
-mov     rax, [rbp+var_18]     ; rax = s1_ptr
-add     rax, rdx              ; rax = s1_ptr + index
-movzx   eax, byte ptr [rax]   ; eax = s1[index] 
-mov     edx, [rbp+var_4]      ; edx = index
-movsxd  rcx, edx              ; rcx = index
-mov     rdx, [rbp+var_18]     ; rdx = s1_ptr
-add     rdx, rcx              ; rdx = s1_ptr + index 
-sub     al, [rbp+var_1C]      ; al = s1[index] - sub_val 
-mov     [rdx], al             ; s1[index] = s1[index] - sub_val
-add     [rbp+var_4], 1        ; index++
-
-conclusion: s1[i] = s1[i] - sub_val
+conclusion: result2[index]=result[index]^3
 ```
 
 
