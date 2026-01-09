@@ -44,14 +44,14 @@ Nice를 출력하는 입력값을 알아내기 위해서 각 암호화 함수들
 loc_122B:
 loc_122B:
 mov     eax, [rbp+var_4]  		;eax=index
-cdqe						        ;Convert Doubleword to Quadword
-lea     rdx, input         ;rdx=input address
+cdqe						       ;Convert Doubleword to Quadword
+lea     rdx, input          ;rdx=input address
 movzx   eax, byte ptr [rax+rdx]	;eax=input[index]
 add     eax, 0Dh				;eax=input[index]+0Dh
 and     eax, 7Fh				;eax=(input[index]+0Dh)&7Fh
 mov     ecx, eax				;ecx=(input[index]+0Dh)&7Fh
 mov     eax, [rbp+var_4]		;eax=index
-cdqe						        ;Convert Doubleword to Quadword
+cdqe						       ;Convert Doubleword to Quadword
 lea     rdx, rot				;rdx=rot address
 mov     [rax+rdx], cl			;rot[index]=(input[index]+0Dh)&7Fh
 add     [rbp+var_4], 1			;index++
