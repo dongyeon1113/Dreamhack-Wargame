@@ -49,9 +49,13 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 | Register / Memory | Variable Name (내 방식) | Description |
 
 | `[rbp+stream]` | `enc address` | SecretMessage.enc file address |
+
 | `[rbp+var_18]` | `raw address` | SecretMessage.raw fie address |
+
 | `[rbp+var_9]` | `cnt` | Same Character counter |
+
 | `[rbp+var_c]` | `raw_current_char` | SecretMessage.raw fie current byte(character) |
+
 | `[rbp+var_4]` | `raw_previous_char` | SecretMessage.raw fie previous byte(character) |
 
 ### Assembly Logic 
