@@ -152,57 +152,41 @@ locret_90F:
     retn
     ; } 
     sub_7FA endp
-``` 
-
-
-### loc_1272 Stack Frame & Register Setup
-| Register / Memory | Variable Name (My Analysis) | Description |
-
-| `[rbp+var_8]` | `index` | Loop counter (initialized to 0) |
-
-### Assembly Logic 
-**Loop Condition:** Iterate 65 times 
-```assembly
-loc_1272:
-    mov     eax, 3Fh                   ; eax = 63
-    sub     eax, [rbp+var_8]           ; eax = 63 - index
-    cdqe                               ; Convert Doubleword to Quadword
-    lea     rdx, rot                   ; rdx = rot address
-    movzx   edx, byte ptr [rax+rdx]    ; edx = rot[63 - index]
-    mov     eax, [rbp+var_8]           ; eax = index
-    cdqe                               ; Convert Doubleword to Quadword
-    lea     rcx, result                ; rcx = result address
-    mov     [rax+rcx], dl              ; result[index] = rot[63 - index]
-    add     [rbp+var_8], 1             ; index++
-
-conclusion: result[index]=rot[63-index]
 ```
 
-### loc_12B6 Stack Frame & Register Setup
-| Register / Memory | Variable Name (My Analysis) | Description |
+이런 과정들이 있어도 가장 중요한것은 결론입니다.
+이해하기 쉽게 다이어그램으로 만들어보았습니다.
 
-| `[rbp+var_C]` | `index` | Loop counter (initialized to 0) |
+## Encoding Logic
 
-### Assembly Logic 
-**Loop Condition:** Iterate 65 times 
-```assembly
-loc_12B6:
-    mov     eax, [rbp+var_C]           ; eax = index
-    cdqe                               ; Convert Doubleword to Quadword
-    lea     rdx, result                ; rdx = result address
-    movzx   eax, byte ptr [rax+rdx]    ; eax = result[index]
-    mov     edx, [rbp+var_10]          ; edx = [rbp+var_10] (Key = 3)
-    xor     eax, edx                   ; eax = result[index] ^ 3
-    mov     ecx, eax                   ; ecx = result[index] ^ 3
-    mov     eax, [rbp+var_C]           ; eax = index
-    cdqe                               ; Convert Doubleword to Quadword
-    lea     rdx, result2               ; rdx = result2 address
-    mov     [rax+rdx], cl              ; result2[index] = result[index] ^ 3
-    add     [rbp+var_C], 1             ; index++
+### Example
+Encoding `aabbbccccdf` into `aa0bb1cc2df`:
 
-conclusion: result2[index]=result[index]^3
+```text
+Input:      aa       bbb       cccc       d      f
+            ||       |||       ||||       |      |
+Count(N):   2         3          4        1      1
+            ↓         ↓          ↓        ↓      ↓
+Logic:    (2-2=0)  (3-2=1)    (4-2=2)    Raw    Raw
+            ↓         ↓          ↓        ↓      ↓
+Output:    aa0       bb1        cc2       d      f
 ```
 
+암호화 로직을 바탕으로 복호화 로직도 다이어그램으로 만들었습니다.
+
+## Decoding Logic
+
+### 🎨 Visual Example
+Decoding `aa0bb1cc2df` back to `aabbbccccdf`:
+
+```text
+Input:     aa0        bb1        cc2        d      f
+           └┬┘        └┬┘        └┬┘        |      |
+Check:    Match      Match      Match      Raw    Raw
+Action:   +0 char    +1 char    +2 chars    -      -
+            ↓          ↓          ↓         ↓      ↓
+Output:    aa         bbb        cccc       d      f
+```
 
 ## 3. Solution (풀이 과정)
 암호화 순서를 분석하여 도출한 역방향 복호화 표입니다.
