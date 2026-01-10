@@ -40,44 +40,120 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 
 ![IDAanalysis](./analysis1.png)
 
+**seceretMessage.raw**를 구하기 위해서는 암호화함수인 **sub_7FA**를 분석하여
+역연산함수를 만들어야합니다.
 
+**sub_7FA**의 동작을 주요 어셈블리어 중심으로 분석했습니다.
 
-
-![loop2](./loop2.png)
-![loop3](./loop3.png)
-
-**input**으로 입력한 문자열이 총 세 번의 loop를 거쳐서 마지막 비교 문자열 s2와 비교되어
-플래그를 출력하는것을 확인할 수 있었습니다.
-
-input은 입력문자열이고 **loc_122B(input,rot)** -> **loc_1272(rot,result)** -> **loc_12B6(result2,result)** -> **memcmp(result2,s2,65)** 순서대로 진행됩니다.
-
-input이 여러 암호화 loop들을 거쳐 s2와 비교되는것을 확인했습니다.
-Nice를 출력하는 입력값을 알아내기 위해서 각 암호화 함수들을 분석했습니다.
-
-### loc_122B Stack Frame & Register Setup
+### **sub_7FA** Stack Frame & Register Setup
 | Register / Memory | Variable Name (내 방식) | Description |
 
-| `[rbp+var_4]` | `index` | Loop counter (initialized to 0) |
+| `[rbp+stream]` | `enc address` | SecretMessage.enc file address |
+| `[rbp+var_18]` | `raw address` | SecretMessage.raw fie address |
+| `[rbp+var_9]` | `cnt` | Same Character counter |
+| `[rbp+var_c]` | `raw_current_char` | SecretMessage.raw fie current byte(character) |
+| `[rbp+var_4]` | `raw_previous_char` | SecretMessage.raw fie previous byte(character) |
 
 ### Assembly Logic 
-**Loop Condition:** Iterate 65 times 
+1 전 글자와 지금 글자가 다를때
 ```assembly
-loc_122B:
-    mov     eax, [rbp+var_4]           ; eax = index
-    cdqe                               ; Convert Doubleword to Quadword
-    lea     rdx, input                 ; rdx = input address
-    movzx   eax, byte ptr [rax+rdx]    ; eax = input[index]
-    add     eax, 0Dh                   ; eax = input[index] + 0xD
-    and     eax, 7Fh                   ; eax = (input[index] + 0xD) & 0x7F
-    mov     ecx, eax                   ; ecx = result
-    mov     eax, [rbp+var_4]           ; eax = index
-    cdqe                               ; Convert Doubleword to Quadword
-    lea     rdx, rot                   ; rdx = rot address
-    mov     [rax+rdx], cl              ; rot[index] = ecx
-    add     [rbp+var_4], 1             ; index++
+loc_82D:
+    mov     [rbp+var_4], 0FFFFFFFFh    ;previous_byte=-1
+    mov     [rbp+var_9], 0             ;cnt=0
+    jmp     loc_8F1
+loc_8F1:
+    mov     rax, [rbp+var_18]		   ;rax=raw address
+    mov     rdi, rax        		   ;rdi=raw address
+    call    _fgetc				       ;raw파일에서 한 글자 받아와서 eax에 저장	
+    mov     [rbp+c], eax			   ;[rbp+c]=raw file 에서 받아온 한 글자
+    cmp     [rbp+c], 0FFFFFFFFh		   ;받아온 글자가 0FFFFFFFFh(파일의 끝인 EOF)인지 비교
+    jnz     loc_83D				       ;받아온 글자가 끝이아니면 jump
+loc_83D:
+    mov     rdx, [rbp+stream]		   ;rdx=enc address
+    mov     eax, [rbp+c]			   ;eax=raw_current_char
+    mov     rsi, rdx        		   ;rsi=enc address
+    mov     edi, eax        		   ;edi=raw_current_char
+    call    _fputc				       ;enc파일에 raw 파일에서 받아온 한 글자를 입력
+    mov     eax, [rbp+c]			   ;eax=raw_current_char
+    cmp     eax, [rbp+var_4]		   ;raw current char을 [rbp+var_4]와 비교 //처음에만 EOF와 비교하고 그 다음부터는 전 글자와 비교
+    jnz     short loc_8D1              ;[rbp+var_4]와 다르면 jump
+loc_8D1:													
+    mov     eax, [rbp+c]			   ;eax=raw_current_char
+    mov     [rbp+var_4], eax		   ;[rbp+var_4]=raw_current_char //이전글자를 저장해서 기억하는 방식
 
-conclusion: rot[index]=(input[index]+0Dh)&7Fh
+loc_8D7:
+    cmp     [rbp+c], 0FFFFFFFFh		   ;raw current char이 EOF인지 확인
+    jnz     short loc_8F1
 ```
+2 전 글자와 지금 글자가 같을때
+```assembly
+loc_83D:
+    mov     rdx, [rbp+stream]		   ;rdx=enc address
+    mov     eax, [rbp+c]			   ;eax=raw_current_char
+    mov     rsi, rdx        		   ;rsi=enc address
+    mov     edi, eax        		   ;edi=raw_current_char
+    call    _fputc				       ;enc파일에 raw 파일에서 받아온 한 글자를 입력
+    mov     eax, [rbp+c]			   ;eax=raw_current_char
+    cmp     eax, [rbp+var_4]		   ;raw current char을 [rbp+var_4]와 비교 //처음에만 EOF와 비교하고 그 다음부터는 전 글자와 비교
+    jnz     short loc_8D1              ;[rbp+var_4]와 다르면 jump 같으면 밑으로 계속해서 진행
+
+    mov     [rbp+var_9], 0             ;cnt=0
+    jmp     short loc_8BA
+loc_88F:
+    movzx   eax, [rbp+var_9]           ;eax=cnt
+    mov     rdx, [rbp+stream]          ;rdx=enc address
+    mov     rsi, rdx                   ;rsi=enc address
+    mov     edi, eax                   ;edi=cnt
+    call    _fputc                     ;enc file에 같은 숫자가 반복된 횟수 기입
+    mov     rdx, [rbp+stream]          ;rdx=enc address
+    mov     eax, [rbp+c]               ;eax=raw_current_char
+    mov     rsi, rdx                   ;rsi=enc address    
+    mov     edi, eax                   ;edi=raw_current_char
+    call    _fputc                     ;enc파일에 raw 파일에서 받아온 한 글자를 입력
+    mov     eax, [rbp+c]               ;eax=raw_current_char
+    mov     [rbp+var_4], eax           ;[rbp+var_4]=raw_current_char //이전글자를 저장해서 기억하는 방식
+    jmp     short loc_8D7                
+loc_8BA:
+    mov     rax, [rbp+var_18]          ;rax=raw address
+    mov     rdi, rax                   ;rsi=raw address
+    call    _fgetc                     ;raw파일에서 한 글자 받아와서 eax에 저장	
+    mov     [rbp+c], eax               ;[rbp+c]=raw파일에서 받아온 한 글자
+    cmp     [rbp+c], 0FFFFFFFFh        ;EOF인지 확인
+    jnz     short loc_85C
+loc_85C:
+    mov     eax, [rbp+c]               ;eax=raw_current_char
+    cmp     eax, [rbp+var_4]           ;raw_currrent_char과 raw_previous_char 비교
+    jnz     short loc_88F              ;다르면 loc_88F로 jump 같으면 밑으로 계속진행
+    movzx   eax, [rbp+var_9]           ;eax=cnt
+    add     eax, 1                     ;eax+=1
+    mov     [rbp+var_9], al            ;cnt=eax
+    cmp     [rbp+var_9], 255           ;cnt와 255비교
+    jnz     short loc_8BA              ;다르면 loc_8BA로 jump 같으면 밑으로 진행
+    movzx   eax, [rbp+var_9]           ;eax=cnt
+    mov     rdx, [rbp+stream]          ;rdx=enc address
+    mov     rsi, rdx                   ;rsi=enc address
+    mov     edi, eax                   ;edi=cnt
+    call    _fputc                     ;enc file에 같은 숫자가 반복된 횟수 기입
+    mov     [rbp+var_4], 0FFFFFFFFh    ;raw previous char에 EOF 저장
+    jmp     short loc_8D7
+loc_8D7:
+    cmp     [rbp+c], 0FFFFFFFFh        ;현재 EOF인지 확인
+    jnz     short loc_8F1              ;아니면 loc_8F1로 이동 //1번에 있습니다!
+    movzx   eax, [rbp+var_9]           ;eax=cnt
+    mov     rdx, [rbp+stream]          ;rdx=enc address
+    mov     rsi, rdx                   ;rsi=end address
+    mov     edi, eax                   ;edi=cnt
+    call    _fputc                     ;enc file에 같은 숫자가 반복된 횟수 기입
+    jmp     short loc_90A
+loc_90A:
+    mov     eax, 0                     ;eax=0 //레지스터 값 비우기
+locret_90F:
+    leave
+    retn
+    ; } 
+    sub_7FA endp
+``` 
+
 
 ### loc_1272 Stack Frame & Register Setup
 | Register / Memory | Variable Name (My Analysis) | Description |
