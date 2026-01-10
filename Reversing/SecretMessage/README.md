@@ -21,6 +21,7 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 ![Ubuntu](./initialrun.png)
 
 다운로드 받은 폴더에는 prob 리눅스 파일 뿐 아니라 **secretMessage.enc**파일과 **imageviewer.py**파일이 있었습니다.
+
 **secretMessage.enc**파일은 알 수 없는 문자들로 암호회되어 있는것을 볼 수 있었습니다.
 
 ![secretMessage.enc](./secretMessage.png)
@@ -34,10 +35,11 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 ### 2.2 Main Logic Finding
 **done!** 성공 문자열을 Cross Reference (Xref) 하여 메인 함수를 찾았습니다.
 
-![IDAanalysis](./analysis1.png)
-
 **seceretMessage.raw**는 **rb**모드로 받아와서 **sub_7FA**를 통해
 **secretMessage.enc**에다가 **encoding**하고 **seceretMessage.raw**는 지워버리는것을 확인할 수 있습니다.
+
+![IDAanalysis](./analysis1.png)
+
 
 
 
