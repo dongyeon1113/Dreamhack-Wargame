@@ -193,17 +193,16 @@ Output:    aa         bbb        cccc       d      f
 ```
 
 ## 3. Solution (풀이 과정)
-암호화 순서를 분석하여 도출한 역방향 복호화 표입니다.
-암호화와 반대로 복호화를하려면 함수실행 순서도 반대로 연산도 역연산으로 수행해야합니다.
+위 다이어그램을 바탕으로 solvercode를 짰습니다. 연속된 두 문자가 감지되면 바로 뒤에 오는 바이트가 추가 반복 횟수를 의미합니다.
 
-| 순서 | 암호화 흐름 (Forward) | 연산 | $\leftrightarrow$ | 복호화 흐름 (Solver) | 역연산 수행 |
-| :---: | :--- | :---: | :---: | :--- | :---: |
-| **1** | `loc_122B(input,rot)` | **ADD -> AND** | $\leftrightarrow$ | **Step 3** (마지막) | **AND -> SUB** |
-| **2** | `loc_1272(rot,result)` | **String Reverse** | $\leftrightarrow$ | **Step 2** | **String Reverse** |
-| **3** | `loc_12B6(result2,result)` | **XOR** | $\leftrightarrow$ | **Step 1** (시작) | **XOR** |
+[문자] == [이전 문자] → 압축 구간 해당 문자를 **다음 바이트 값**만큼 추가로 출력하고, 인덱스를 2칸 건너뜁니다.
+그 외의 경우는 그대로 출력합니다.
+예시:aa0 $\rightarrow$ aa (+0개 추가) bb1 $\rightarrow$ bbb (+1개 추가)
+
+원본 파일을 복구하는 파이썬 코드는 다음과 같습니다.
 
 ### Full Solver Code
-[solution.c](./solution.c) 파일을 참고하세요.
+[solution](./solution.py) 파일을 참고하세요.
 
 ## 4. Result
 플래그 추출 성공: `DH{e615b75a4d563ac971466e05641d7aed556b62fcb460b6027f126bff411bfe63}`
