@@ -176,7 +176,7 @@ Output:    aa0       bb1        cc2       d      f
 
 ## Decoding Logic
 
-### 🎨 Visual Example
+### Example
 Decoding `aa0bb1cc2df` back to `aabbbccccdf`:
 
 ```text
