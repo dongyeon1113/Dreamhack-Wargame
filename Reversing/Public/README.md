@@ -197,41 +197,14 @@ graph TD
 
 ```mermaid
 graph TD
-    %% 1. 해킹 단계 (왼쪽 라인)
-    subgraph Attack_Phase [💀 Phase 1: 개인키 해킹 (RSA Attack)]
-        Step1[("🔓 공개 정보<br>n1 (Modulus)<br>n2 (Exponent)")]:::public
-        Step2["💥 취약점 공격<br>n1 소인수분해 (Factorize)"]:::hack
-        Step3["🔑 비밀 소수 발견!<br>( p, q )"]:::secret
-        Step4["🧮 수학적 연산<br>Euler's Totient & Inverse"]:::math
-        Step5[("🗝️ 개인키(d) 획득!<br>Private Key")]:::key
-    end
+    Node1[" Input: out.bin 파일 (Binary)"]
+    Node2[" Process: 8바이트 단위 정수 변환 (Little Endian)"]
+    Node3{" Decrypt: RSA 복호화      (Cipher ^ d) % n1 "}
+    Node4[" Output: 원본 플래그 (String)"]
 
-    %% 2. 복호화 단계 (오른쪽 라인)
-    subgraph Decrypt_Phase [🛠️ Phase 2: 파일 복구 (Decryption)]
-        File[("💾 out.bin<br>(암호화된 파일)")]:::file
-        Process["⚙️ RSA 역연산 수행<br>( $C^d \pmod{n1}$ )"]:::process
-        Result[("🚩 최종 결과<br>Flag 문자열 획득")]:::result
-    end
-
-    %% 연결선 정의
-    Step1 --> Step2
-    Step2 -->|n1 = p × q| Step3
-    Step3 -->|phi = (p-1)(q-1)| Step4
-    Step4 -->|d = n2^-1 mod phi| Step5
-    
-    File -->|8바이트 읽기| Process
-    Step5 -.->|만능 열쇠 적용| Process
-    Process -->|Integer to String| Result
-
-    %% 스타일 정의
-    classDef public fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-    classDef hack fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828;
-    classDef secret fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-    classDef math fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 5 5;
-    classDef key fill:#fff8e1,stroke:#fbc02d,stroke-width:4px,font-weight:bold;
-    classDef file fill:#eceff1,stroke:#455a64,stroke-width:2px;
-    classDef process fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20;
-    classDef result fill:#212121,stroke:#000,stroke-width:2px,color:#fff;
+    Node1 -->|8바이트 읽기| Node2
+    Node2 -->|계산 (Key: d)| Node3
+    Node3 -->|문자열 변환| Node4
 ```
 
 ## 3. Solution (풀이 과정)
