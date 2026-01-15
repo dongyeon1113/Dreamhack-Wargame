@@ -71,6 +71,7 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 
 ### Assembly Logic 
 ```assembly
+
 loc_1734:
     lea     rsi, aWb                    ; "wb"
     lea     rdi, aOutBin                ; "out.bin"
@@ -130,25 +131,58 @@ loc_175A:
 ### Assembly Logic 
 ```assembly
 
+    push    rbp
+    mov     rbp, rsp
+    sub     rsp, 30h                    
+    mov     [rbp+var_18], rdi			;[rbp+var_18]=flag[4*i]
+    mov     [rbp+var_20], rsi			;[rbp+var_20]=n2
+    mov     [rbp+var_28], rdx			;[rbp+var_28]=n1
+    cmp     [rbp+var_28], 0				;if (n1==0) jump loc_12B2
+    jnz     short loc_12B2
+
+loc_12B2:
+    mov     [rbp+var_10], 1				;result=1
+    mov     [rbp+var_8], 0				;cnt=0
+    jmp     short loc_12EE
+
+loc_12EE:
+    mov     rax, [rbp+var_8]			;cnt=0
+    cmp     rax, [rbp+var_20]			;if (cnt<n2) jump loc_12C4
+    jb      short loc_12C4
+    mov     rax, [rbp+var_10]			;retrun result
+    leave
+    retn
+; } // starts at 1289
+sub_1289 endp
+
+loc_12C4:
+    mov     rax, [rbp+var_10]			;rax=result
+    imul    rax, [rbp+var_18]			;rax=result*flag[4*i]
+    mov     [rbp+var_10], rax			;result=result*flag[4*i]
+    cmp     [rbp+var_28], 0				;n1==0
+    jz      short loc_12E9
+    mov     rax, [rbp+var_10]			;rax=result
+    mov     edx, 0					    ;edx=0
+    div     [rbp+var_28]				;rax=result/n1, rdx=result%n1	
+    mov     [rbp+var_10], rdx			;result=result%n1
+
+loc_12E9:
+    add     [rbp+var_8], 1				;cnt+=1
+
+result=(flag[4*i]^n2)%n1
 ```
 
-이런 과정들이 있어도 가장 중요한것은 결론입니다.
-이해하기 쉽게 다이어그램으로 만들어보았습니다.
 
 ## Encoding Logic
+flag.txt를 4byte씩 잘라서 **RSA**알고리즘을 적용
 
-### Example
-Encoding `aabbbccccdf` into `aa0bb1cc2df`:
-
-```text
-Input:      aa       bbb       cccc       d      f
-            ||       |||       ||||       |      |
-Count(N):   2         3          4        1      1
-            ↓         ↓          ↓        ↓      ↓
-Logic:    (2-2=0)  (3-2=1)    (4-2=2)    Raw    Raw
-            ↓         ↓          ↓        ↓      ↓
-Output:    aa0       bb1        cc2       d      f
-```
+graph LR
+    A[원본 플래그\n'DH{T'] -->|1. 4글자 자르기| B(숫자로 변환\nInteger);
+    B -->|2. RSA 암호화| C{계산 공식\n숫자 ^ n2 % n1};
+    C -->|3. 결과 저장| D[out.bin 파일\n8바이트 저장];
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
 
 암호화 로직을 바탕으로 복호화 로직도 다이어그램으로 만들었습니다.
 
