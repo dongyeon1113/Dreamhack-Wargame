@@ -194,12 +194,13 @@ graph TD
 암호화 로직을 바탕으로 복호화 로직도 다이어그램으로 만들었습니다.
 
 ## Decoding Logic
+RSA를 푸는 열쇠인 **d**는 **n1**을 두 소수(p, q)로 소인수분해 해야만 알 수 있는 **(p-1)(q-1)**을 통해 만들어집니다.
 
 ```mermaid
 graph TD
     Node1[" Input: out.bin 파일 (Binary)"]
     Node2[" Process: 8바이트 단위 정수 변환 (Little Endian)"]
-    Node3{" Decrypt: RSA 복호화      (Cipher ^ d) % n1 "}
+    Node3{" Decrypt: RSA 복호화      (out_data^ d) % n1 "}
     Node4[" Output: 원본 플래그 (String)"]
 
     Node1 -->|8바이트 읽기| Node2
@@ -208,13 +209,9 @@ graph TD
 ```
 
 ## 3. Solution (풀이 과정)
-위 다이어그램을 바탕으로 solvercode를 짰습니다. 연속된 두 문자가 감지되면 바로 뒤에 오는 바이트가 추가 반복 횟수를 의미합니다.
+위 다이어그램을 바탕으로 solvercode를 짰습니다.
 
-[문자] == [이전 문자] → 압축 구간 해당 문자를 **다음 바이트 값**만큼 추가로 출력하고, 인덱스를 2칸 건너뜁니다.
-그 외의 경우는 그대로 출력합니다.
-예시:aa0 $\rightarrow$ aa (+0개 추가) bb1 $\rightarrow$ bbb (+1개 추가)
-
-원본 파일을 복구하는 파이썬 코드는 다음과 같습니다.
+flag.txt를 복구하는 파이썬 코드는 다음과 같습니다.
 
 ### Full Solver Code
 [solution](./solution.py) 파일을 참고하세요.
