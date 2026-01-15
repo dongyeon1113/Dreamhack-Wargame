@@ -175,8 +175,11 @@ result=(flag[4*i]^n2)%n1
 
 ## Encoding Logic
 flag.txt를 4byte씩 잘라서 **RSA**알고리즘을 적용
+
 out=(flag^n2)%n1 
+
 n2는 **public key**
+
 ```mermaid
 graph TD
     Node1[" Input: 원본 플래그 (String)"]
@@ -196,9 +199,13 @@ graph TD
 
 ## Decoding Logic
 RSA를 푸는 열쇠인 **d**는 **n1**을 두 소수(p, q)로 소인수분해 해야만 알 수 있는 **(p-1)(q-1)** 을 통해 만들어집니다.
+
 d=inverse(n2,(p-1)*(q-1))
+
 flag=(out^d)%n1
+
 d는 **private key**
+
 ```mermaid
 graph TD
     Node1[" Input: out.bin 파일 (Binary)"]
