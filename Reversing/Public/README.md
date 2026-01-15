@@ -203,7 +203,7 @@ graph TD
     Node4[" Output: 원본 플래그 (String)"]
 
     Node1 -->|8바이트 읽기| Node2
-    Node2 -->|계산 (Key: d)| Node3
+    Node2 -->|계산| Node3
     Node3 -->|문자열 변환| Node4
 ```
 
