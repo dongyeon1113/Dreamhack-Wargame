@@ -38,11 +38,11 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 **seceretMessage.raw**는 **rb**모드로 받아와서 **sub_7FA**를 통해
 **secretMessage.enc**에다가 **encoding**하고 **seceretMessage.raw**는 지워버리는것을 확인할 수 있습니다.
 
-![IDAanalysis](./analysis1.png)
+![IDAanalysis](./idaanalysis1.png)
 
-![IDAanalysis](./analysis2.png)
+![IDAanalysis](./idaanalysis2.png)
 
-![IDAanalysis](./analysis3.png)
+![IDAanalysis](./idaanalysis3.png)
 
 **seceretMessage.raw**를 구하기 위해서는 암호화함수인 **sub_7FA**를 분석하여
 역연산함수를 만들어야합니다.
