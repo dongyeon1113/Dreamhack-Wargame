@@ -175,8 +175,8 @@ result=(flag[4*i]^n2)%n1
 
 ## Encoding Logic
 flag.txt를 4byte씩 잘라서 **RSA**알고리즘을 적용
-
-graph TD
+```mermaid
+graph TD;
     Node1["📃 Input: 원본 플래그 (String)"]
     Node2["⚙️ Process: 4바이트 단위 정수 변환 (Integer)"]
     Node3{"🔐 Encrypt: RSA 암호화 ( $Num \pow n2 \pmod{n1}$ )"}
@@ -185,8 +185,8 @@ graph TD
     Node1 -->|슬라이싱| Node2
     Node2 -->|계산| Node3
     Node3 -->|저장| Node4
-
-    style Node3 stroke:#f00,stroke-width:2px,fill:#fff0f0
+```
+    
 
 암호화 로직을 바탕으로 복호화 로직도 다이어그램으로 만들었습니다.
 
