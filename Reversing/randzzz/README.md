@@ -44,179 +44,28 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 올바른 입력값이 들어간다면 프로그램이 flag를 제대로 출력할것이고,
 프로그램 안에 어떤 입력값이 들어가야하는지를 특정숫자와 비교하는구문이 있을것이라는 가설을 세웠습니다.
 
-
-
-**call sub_1289**함수를 통해 나온 결과값을 **_fwrite**를 통해서 **out.bin**에 **write**하는것을 보고
-**call sub_1289**이 암호화 함수라고 결론을 내렸습니다.
+**ecx**와 **eax**레지스터에 있는값을 비교해서 get_flag를 출력할지말지를 결정하는 부분입니다.
 
 ![IDAanalysis](./idaanalysis3.png)
 
-**flag.txt**를 구하기 위해서는 암호화함수인 **sub_1289**뿐만이 아니라 주변 어셈블리들도 분석하여
-역연산함수를 만들어야합니다.
+**ecx**와 **eax**에 어떤값이 들어가는지 실제로 확인하기 위해서 pwndbg로 디버깅해보았습니다.
+입력값으로 넣은 수 0x263(10진수 611)과 5를 비교하는것을 확인했습니다.
 
-**sub_1289**의 동작을 중심으로 분석했습니다.
+![Pwndbg](./compare.png)
 
-### **main함수의 일부분** Stack Frame & Register Setup
-| Register / Memory | Variable Name (내 방식) | Description |
+5를 넣으면 get_flag()가 호출될것이라고 생각하고 입력값으로 5를 넣고 실행해보았습니다.
+68자리는 아니지만 정상적인 문자로 구성된 32글자의 flag가 출력되었습니다.
 
-| `[rbp+stream]` | `out.bin addr` | out.bin file address |
-
-| `[rbp+var_174]` | `i` | loop counter |
-
-| `[rbp+s]` | `flag.txt addr` | flag.txt file address |
-
-| `[rbp+140]` | `n1` | n1 |
-
-| `[rbp+138]` | `n2` | n2 |
-
-### Assembly Logic 
-```assembly
-
-loc_1734:
-    lea     rsi, aWb                    ; "wb"
-    lea     rdi, aOutBin                ; "out.bin"
-    call    _fopen                                
-    mov     [rbp+stream], rax			;[rbp+stream]=out.bin addr
-    mov     [rbp+var_174], 0			;index=0
-    jmp     short loc_17CC
-loc_17CC:
-    mov     eax, [rbp+var_174]			;eax=index
-    movsxd  rbx, eax					;rbx=index
-    lea     rax, [rbp+s]				;rax=flag.txt addr
-    mov     rdi, rax            		;rdi=flag.txt addr
-    call    _strlen					    ;rax=strlen(flag)
-    shr     rax, 2					    ;rax=strlen(flag)>>2
-    cmp     rbx, rax					;if (index < strlen(flag)>>2) jmp loc_175A 
-    jb      loc_175A
-
-loc_175A:
-    mov     eax, [rbp+var_174]			;eax=index
-    cdqe
-    lea     rdx, ds:0[rax*4]			;rdx=index*4
-    lea     rax, [rbp+s]				;rax=flag.txt addr
-    add     rax, rdx					
-    mov     eax, [rax]					;eax=flag[4*i]
-    mov     [rbp+var_16C], eax			;[rbp+var_16C]=flag[4*i]
-    mov     eax, [rbp+var_16C]			;eax=flag[4*i]
-    mov     rdx, [rbp+var_140]			;rdx=n1
-    mov     rcx, [rbp+var_138]			;rcx=n2
-    mov     rsi, rcx					;rsi=n2				
-    mov     rdi, rax					;rdi=flag[4*i]
-    call    sub_1289					;sub_1289(flag[4*i],n2,n1)
-    mov     [rbp+ptr], rax				;[rbp+ptr]=(flag[4*i]^n2)mod n1
-    mov     rdx, [rbp+stream]           ;rdx=out.bin addr
-    lea     rax, [rbp+ptr]              ;rax=[rbp+ptr] addr
-    mov     rcx, rdx                    ; s            
-    mov     edx, 1                      ; n
-    mov     esi, 8                      ; size
-    mov     rdi, rax                    ; ptr
-    call    _fwrite    
-    add     [rbp+var_174], 1            ;index++
-
-```
-
-### **sub_1289** Stack Frame & Register Setup
-| Register / Memory | Variable Name (내 방식) | Description |
-
-| `[rbp+var_28]` | `n1` | modulo value |
-
-| `[rbp+var_20]` | `n2` | exponent value |
-
-| `[rbp+var_18]` | `flag[4*i]` | flag.txt 4byte chunk |
-
-| `[rbp+var_10]` | `result` | return value |
-
-| `[rbp+var_8]` | `cnt` | loop counter |
-
-### Assembly Logic 
-```assembly
-
-    push    rbp
-    mov     rbp, rsp
-    sub     rsp, 30h                    
-    mov     [rbp+var_18], rdi			;[rbp+var_18]=flag[4*i]
-    mov     [rbp+var_20], rsi			;[rbp+var_20]=n2
-    mov     [rbp+var_28], rdx			;[rbp+var_28]=n1
-    cmp     [rbp+var_28], 0				;if (n1==0) jump loc_12B2
-    jnz     short loc_12B2
-
-loc_12B2:
-    mov     [rbp+var_10], 1				;result=1
-    mov     [rbp+var_8], 0				;cnt=0
-    jmp     short loc_12EE
-
-loc_12EE:
-    mov     rax, [rbp+var_8]			;cnt=0
-    cmp     rax, [rbp+var_20]			;if (cnt<n2) jump loc_12C4
-    jb      short loc_12C4
-    mov     rax, [rbp+var_10]			;retrun result
-    leave
-    retn
-; } // starts at 1289
-sub_1289 endp
-
-loc_12C4:
-    mov     rax, [rbp+var_10]			;rax=result
-    imul    rax, [rbp+var_18]			;rax=result*flag[4*i]
-    mov     [rbp+var_10], rax			;result=result*flag[4*i]
-    cmp     [rbp+var_28], 0				;n1==0
-    jz      short loc_12E9
-    mov     rax, [rbp+var_10]			;rax=result
-    mov     edx, 0					    ;edx=0
-    div     [rbp+var_28]				;rax=result/n1, rdx=result%n1	
-    mov     [rbp+var_10], rdx			;result=result%n1
-
-loc_12E9:
-    add     [rbp+var_8], 1				;cnt+=1
-
-result=(flag[4*i]^n2)%n1
-```
+![Pwndbg](./input5run.png)
 
 
-## Encoding Logic
-flag.txt를 4byte씩 잘라서 **RSA**알고리즘을 적용
 
-out=(flag^n2)%n1 
 
-n2는 **public key**
 
-```mermaid
-graph TD
-    Node1[" Input: 원본 플래그 (String)"]
-    Node2[" Process: 4바이트 단위 정수 변환 (Integer)"]
-    Node3{" Encrypt: RSA 암호화     (flag[4*i] ^ n2) % n1 "}
-    Node4[" Output: out.bin 파일 (Binary)"]
 
-    Node1 -->|슬라이싱| Node2
-    Node2 -->|계산| Node3
-    Node3 -->|저장| Node4
 
-  
-```
-    
 
-암호화 로직을 바탕으로 복호화 로직도 다이어그램으로 만들었습니다.
 
-## Decoding Logic
-RSA를 푸는 열쇠인 **d**는 **n1**을 두 소수(p, q)로 소인수분해 해야만 알 수 있는 **(p-1)(q-1)** 을 통해 만들어집니다.
-
-d=inverse(n2,(p-1)*(q-1))
-
-flag=(out^d)%n1
-
-d는 **private key**
-
-```mermaid
-graph TD
-    Node1[" Input: out.bin 파일 (Binary)"]
-    Node2[" Process: 8바이트 단위 정수 변환 (Little Endian)"]
-    Node3{" Decrypt: RSA 복호화      (out_data^ d) % n1 "}
-    Node4[" Output: 원본 플래그 (String)"]
-
-    Node1 -->|8바이트 읽기| Node2
-    Node2 -->|계산| Node3
-    Node3 -->|문자열 변환| Node4
-```
 
 ## 3. Solution (풀이 과정)
 위 다이어그램을 바탕으로 solvercode를 짰습니다.
