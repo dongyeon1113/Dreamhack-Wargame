@@ -37,6 +37,13 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 
 ![IDAanalysis](./idaanalysis2.png)
 
+패치 후 실행해보니 입력값을 받아서 DH{}를 출력하는것을 확인할 수 있었습니다.
+
+![Pwndbg](./patchafterrun.png)
+
+올바른 입력값이 들어간다면 프로그램이 flag를 제대로 출력할것이고,
+프로그램 안에 어떤 입력값이 들어가야하는지를 특정숫자와 비교하는구문이 있을것이라는 가설을 세웠습니다.
+
 
 
 **call sub_1289**함수를 통해 나온 결과값을 **_fwrite**를 통해서 **out.bin**에 **write**하는것을 보고
