@@ -31,35 +31,63 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 **fall asleep from now on** 문자열을 출력하는 구문 뒤에 난수를 **rand**함수로 입력받아서
 **_sleep**함수의 인자로 넣어주는것을 볼 수 있습니다.
 
+
 ![IDAanalysis](./idaanalysis1.png)
+
 
 **_sleep** 함수는 5byte 크기의 함수이므로 1byte크기의 nop으로 다섯번 대체해주었습니다.
 
+
 ![IDAanalysis](./idaanalysis2.png)
+
 
 패치 후 실행해보니 입력값을 받아서 DH{}를 출력하는것을 확인할 수 있었습니다.
 
+
 ![Pwndbg](./patchafterrun.png)
+
 
 올바른 입력값이 들어간다면 프로그램이 flag를 제대로 출력할것이고,
 프로그램 안에 어떤 입력값이 들어가야하는지를 특정숫자와 비교하는구문이 있을것이라는 가설을 세웠습니다.
 
 **ecx**와 **eax**레지스터에 있는값을 비교해서 get_flag를 출력할지말지를 결정하는 부분입니다.
 
+
 ![IDAanalysis](./idaanalysis3.png)
+
 
 **ecx**와 **eax**에 어떤값이 들어가는지 실제로 확인하기 위해서 pwndbg로 디버깅해보았습니다.
 입력값으로 넣은 수 0x263(10진수 611)과 5를 비교하는것을 확인했습니다.
 
+
 ![Pwndbg](./compare.png)
+
 
 5를 넣으면 get_flag()가 호출될것이라고 생각하고 입력값으로 5를 넣고 실행해보았습니다.
 68자리는 아니지만 정상적인 문자로 구성된 32글자의 flag가 출력되었습니다.
+
 
 ![Pwndbg](./input5run.png)
 
 
 
+get_flag()를 호출할지 말지를 결정하는 비교구문을 확인했습니다.
+
+
+![IDAanalysis](./idaanalysis4.png)
+
+
+실제로 레지스터 값들을 확인하기위해 해당 부분을 디버깅해보았습니다.
+입력값을 3과 비교하는것을 확인했습니다.
+
+![Pwndbg](./compare2.png)
+
+
+3을 입력값으로 넣어서 실행했지만 텅빈 flag가 나왔습니다.
+이런경우는 출제자가 의도적으로 코드를 꼬아놓거나 특정조건에서 출력될 가능성이 높습니다.
+
+
+![Pwndbg](./input3run.png)
 
 
 
