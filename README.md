@@ -29,7 +29,7 @@
 
 ```bash
 ├── Reversing/                  # Dreamhack Wargame 문제 풀이 모음
-│   ├── 여러문제들/
+│   ├── Problems/
 │   │   ├── README.md           # 상세 분석 노트 (Assembly Logic & Strategy)
 │   │   └── solution.c          # 연산(Inverse Operation) 구현 코드
 │   │      
