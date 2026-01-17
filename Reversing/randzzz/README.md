@@ -26,7 +26,7 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 ![Pwndbg](./run.png)
 
 
-### 2.2 Main Logic Finding
+### 2.2 Main Logic Finding & Solution
 **chall**문제 파일을 ida로 열어 어셈블리 구조를 확인했습니다.
 **fall asleep from now on** 문자열을 출력하는 구문 뒤에 난수를 **rand**함수로 입력받아서
 **_sleep**함수의 인자로 넣어주는것을 볼 수 있습니다.
@@ -90,27 +90,38 @@ get_flag()를 호출할지 말지를 결정하는 비교구문을 확인했습�
 ![Pwndbg](./input3run.png)
 
 
+입력값이 3일 때 호출되는 get_flag() 루틴을 분석한 결과 
+반환값을 저장하는 인덱스 연산에 오류가 있음을 확인했습니다.
+
+원래는 인덱스 0부터 저장되어야 하나 코드상에서 result[i + 0x1C]와 같이 오프셋(0x1C, 10진수 28)이 더해지고 있었습니다.
+
+이로 인해 플래그가 버퍼의 28번째 인덱스부터 기록되었으며 앞부분이 비어있어 출력 시 플래그가 보이지 않았던 것입니다.
 
 
+![IDAanalysis](./idaanalysis5.png)
 
 
+오프셋(0x1C)를 더하는 부분을 nop처리 해주었습니다.
 
-## 3. Solution (풀이 과정)
-위 다이어그램을 바탕으로 solvercode를 짰습니다.
 
-flag.txt를 복구하는 파이썬 코드는 다음과 같습니다.
+![IDAanalysis](./idaanalysis6.png)
 
-### Full Solver Code
-[solution](./solution.py) 파일을 참고하세요.
 
-## 4. Result
-![Success Screenshot](./flag_success.png)
+다시 3을 넣어서 출력해주니 정상적인 flag가 출력되는것을 확인할 수 있었습니다.
+앞서 5를 넣었을때 출력된 flag와 합쳐보니 68글자로 문제에서 제공되었던 정보와 같은걸로 보아
+합한것이 최종 flag라고 결론을 내렸습니다.
 
-## 5. Thoughts
-처음에는 주요 로직을 분석했을때 그냥 다른 암호화문제들이랑 다를게 없어서 쉽다생각했는데, modulo연산과 지수계산이 섞인 연산을 역연산하려니까 
-못 풀겠어서 구글링을 했더니 RSA 암호화 알고리즘이라는것을 알게되었고 **소인수분해**와 inverse계산을 통해서 privatekey를 찾는것이 핵심이었다.
-암호학의 기초인 RSA알고리즘을 알게되었는데 진짜 쉽지않았다.
+![Pwndbg](./finalinput3run.png)
 
+
+## 3. Result
+DH{c8b48ac08bbe00068ffb6606e2cf6ba0002c0dc4dd0aba20ac8d0608860048e0}
+![success](./flag_success.png)
+
+## 4. Thoughts
+처음으로 어셈블리어를 분석하지않고 동적분석도구를 적극활용하여 문제를 풀었다.
+먼저 ida로 초기분석을 하고 확인하고 싶은 부분을 pwndbg로 실시간으로 값을 확인하니 직접 눈빠지게 어셈블리어를 분석하는것보다 시간도 덜 걸렸고
+새로운 tool을 다룰수 있게되어서 좋았다.
 
 
 
