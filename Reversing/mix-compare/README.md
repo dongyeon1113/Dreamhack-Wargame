@@ -97,7 +97,7 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 
 복호화 수도코드들을 바탕으로 solver코드를 짰습니다.
 
-[solution.c](./solution.c)
+[solution.c](./solver.py)
 
 
 ## 3. Result
