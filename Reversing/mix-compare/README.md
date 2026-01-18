@@ -29,7 +29,7 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 
 **check**함수를 통해 input을 검증하고 flag를 출력할지를 결정하고있습니다.
 
-![IDAanalysis](./idaanalysis.png)
+![IDAanalysis](./idaanlysis.png)
 
 **input**문자열이 64글자라는것을 비교구문을 통해서 확인했습니다.
 
