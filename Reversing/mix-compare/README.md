@@ -49,7 +49,7 @@ Reference: Pwndbg는 리눅스 GDB(GNU Debugger)를 위한 플러그인으로 �
 이해를 돕기 위해 i==2일때도 해석해보겠습니다.
 **input[2]-4 == dword_4028**입니다.
 
-![IDAanalysis](./check1.png)
+![IDAanalysis](./check2.png)
 
 16번 모두 다른연산이지만 더하기 빼기와 같은 복호화가 쉬운 연산이어서
 쉽게 복구할 수 있었습니다.
