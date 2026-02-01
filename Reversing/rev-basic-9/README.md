@@ -30,7 +30,7 @@
 KEY = b"I_am_KEY"
 
 # S-Box 테이블 (메모리 0x140004020 참조)
-S_BOX = [ ... ] # 너무 길어서 안 넣음
+S_BOX = [ ... ] # 생략
 
 # ROR 함수
 def ROR(val, n, bits=8):
@@ -55,23 +55,33 @@ def encrypt_block(block):
     return block
 ```
 
-## 3. Solution (풀이 과정)
-정적 분석을 통해 파악한 암호화 루틴은 Input -> ADD -> ROR -> Data 순서로 진행됩니다. 따라서 원본 플래그(Input)를 복구하기 위해서는 연산 순서를 역순으로 뒤집고, 각 연산의 역함수(Inverse Function)를 적용해야 합니다. ex) ROL대신 ROR적용
+## 3. Solution
 
-Step 1 (ROR 복구): ROR(오른쪽 회전)의 역연산은 ROL(왼쪽 회전) 이므로 가장 먼저 **ROL(result,5)** 를 수행합니다.
+암호화 루틴을 분석한 결과, 데이터는 다음과 같은 과정을 거쳐 변환됩니다.
+```mermaid
+graph LR
+    A[Input] -- "+ S_Box" --> B(temp)
+    B -- "ROR 5" --> C[Encrypted Data]
+```
 
-Step 2 
+따라서 복호화(Decryption)는 이 과정을 거꾸로 거슬러 올라가며 역연산을 수행해야 합니다.
+
+```mermaid
+graph LR
+    C[Encrypted Data] -- "ROL 5" --> B(temp)
+    B -- "- S_BOX" --> A[Input]
+```
 
 ### Full Solver Code
-[solution.c](./solution.c) 파일을 참고하세요.
+[solution](./solution.py) 파일을 참고하세요.
 
 ## 4. Result
-플래그 추출 성공: `DH{Roll_the_left!_Roll_the_right!}`
+플래그 추출 성공: `DH{Reverse__your__brain_;)}`
 
 ![Success Screenshot](./flag_success.png)
 
 ## 5. Thoughts
-시리즈의 후반부로 갈수록 어셈블리 코드의 복잡도가 높아짐을 체감한다. 이번 문제에서 ROL과 XOR이라는 핵심 암호화 로직은 성공적으로 파악하여 C언어로 복원했지만, 분석 과정에서 **스택 프레임 초기화 및 메모리 정리**와 같은 점을 실제 로직으로 오인하여 시간을 소모했다.
-모든 어셈블리 명령어를 해석하려 하기보다, 전체적인 흐름을 먼저 파악하는 것의 중요성을 깨달았다. 또한, 정적 분석(Static Analysis)만으로는 메모리 값의 변화를 추적하는 데 한계가 있음을 느꼈다. 앞으로는 **x64dbg와 같은 동적 분석 도구**를 적극 도입하여 좀 더 발전해야겠다.
-
+드디어 rev-basic 시리즈의 마지막을 풀었다. 이 마지막 문제를 풀기 위해서 레벨2 문제들을 디컴파일러없이 풀면서 어셈블리 독해실력을 키웠다.
+레벨 3에 들어오면서 체감난이도가 확 뛴거같다. 이번문제의 요점은 데이터가 어떻게 저장되는지를 파악하는것이었다. 역연산을 짜는데 시간이 좀 걸렸다.
+음수가 나오는것을 방지해야지 이 문제가 풀린다.
 
