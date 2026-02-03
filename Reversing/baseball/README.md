@@ -1,4 +1,4 @@
-# Dreamhack: rev-basic-9 Write-up
+# Dreamhack: baseball Write-up
 
 ## 1. Problem Overview
 - **Category:** Reversing
