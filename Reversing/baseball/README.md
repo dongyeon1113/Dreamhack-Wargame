@@ -14,6 +14,8 @@
 
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Main Logic Finding 
+![IDAanalysis](./idaanalysis1.png)
+
 - **sub_1289** 함수가 핵심 인코딩 로직을 담당
 
 - 입력값을 3바이트씩 읽어서 복잡한 비트 연산을 거쳐 4글자로 변환
