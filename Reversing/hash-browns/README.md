@@ -5,7 +5,7 @@
 - **Difficulty:** Level 3
 - **Tool:** IDA Free, VS Code (Python), pwndbg
 - **Description:** 주어진 md5 해쉬값을 활용하여 correct를 출력하는 문자열을 복호화 하는 문제
-- 
+
 ### MD5 개념 (Reference)
 - MD5(Message-Digest Algorithm 5)는 128-bit(16byte) 고정 길이의 해시값을 출력하는 단방향 암호화 알고리즘입니다.
 
@@ -14,13 +14,15 @@
 
 ![IDA](./idaanalysis1.png)
 
-**buf**배열에 문자열을 입력받아 세 함수를 실행하며 memcmp를 통해서 문자열을 비교하고있습니다.
+**buf**배열에 문자열을 입력받아 세 함수(sub_1209,sub_125C,sub_13E7)를 실행하며 memcmp를 통해서 문자열을 비교하고있습니다.
 
-linux 동적 디버거 pwndbg로 v6값 즉 **[rbp - 0x210]에 위치하는값을 확인해보았습니다. 
+linux 동적 디버거 pwndbg로 v6값 즉 **[rbp - 0x210]** 에 위치하는값을 확인해보았습니다. 
 
+## 3. Dynamic Analysis (동적 분석)
+### 3.1. MD5 constant value finding 
+**sub_1209** 실행 후 MD5의 표준 초기값 4개를 **[rbp - 0x210]** 에 저장하는것을 확인했습니다.
 
-
-바이너리 분석 중 MD5의 표준 초기값 4개를 메모리에 저장하는것을 확인했습니다.
+x64 아키텍처는 데이터를 메모리에 저장할 때 리틀엔디언으로 저장합니다.
 
 ```bash
 pwndbg> x/88bx $rbp - 0x210
@@ -28,30 +30,35 @@ pwndbg> x/88bx $rbp - 0x210
 0x7fffffffda98: 0x01    0x23    0x45    0x67    0x89    0xab    0xcd    0xef
 0x7fffffffdaa0: 0xfe    0xdc    0xba    0x98    0x76    0x54    0x32    0x10
 ```
-
-이를 통해 변조되지 않은 **Standard MD5** 알고리즘임을 식별했습니다.
 
 > - A: `0x67452301`
 > - B: `0xEFCDAB89`
 > - C: `0x98BADCFE`
 > - D: `0x10325476`
 
-**리틀 엔디언 (Little Endian)** 
+이를 통해 변조되지 않은 **Standard MD5** 알고리즘임을 확인했습니다.
 
-x64 아키텍처는 데이터를 메모리에 저장할 때 바이트 순서를 거꾸로 저장합니다. GDB 분석 시 이 점을 유의해야 합니다.
+### 3.2. Input value finding
+**sub_125C** 실행 후 입력했던 문자열 **testtest** 중 **tes**까지 **[rbp - 0x210]** 에 저장하는것을 확인했습니다.
 
 ```bash
 pwndbg> x/88bx $rbp - 0x210
-0x7fffffffda90: 0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00
+0x7fffffffda90: 0x18    0x00    0x00    0x00    0x00    0x00    0x00    0x00
 0x7fffffffda98: 0x01    0x23    0x45    0x67    0x89    0xab    0xcd    0xef
 0x7fffffffdaa0: 0xfe    0xdc    0xba    0x98    0x76    0x54    0x32    0x10
+0x7fffffffdaa8: 0x74    0x65    0x73
+
+**문자열 tes를 각각 ascii hex값으로 변환하면 0x74, 0x65, 0x73이다.
 ```
 
-Usage 문자열: 프로그램 실행 시 첫 번째 인자로 **table filename** 을 요구
+### 3.3. MD5
+**sub_13E7** 실행 후 입력했던 문자열 **testtest** 중 **tes**까지 **[rbp - 0x210]** 에 저장하는것을 확인했습니다.
 
-데이터 로드: fread 함수를 통해 해당 파일에서 65바이트를 읽어 전역 변수 **byte_4040** 에 저장
 
-결론: **table** 파일의 data가 **byte_4040**에 저장
+
+
+
+
 
 ### 2.2. Assembly to Python (핵심)
 - C언어로 작성된 sub_1289 함수의 핵심 비트 연산 로직을 Python으로 재구성하면 다음과 같음
