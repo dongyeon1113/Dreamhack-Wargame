@@ -51,80 +51,62 @@ pwndbg> x/88bx $rbp - 0x210
 **문자열 tes를 각각 ascii hex값으로 변환하면 0x74, 0x65, 0x73이다.
 ```
 
-### 3.3. MD5
-**sub_13E7** 실행 후 입력했던 문자열 **testtest** 중 **tes**까지 **[rbp - 0x210]** 에 저장하는것을 확인했습니다.
+### 3.3. MD5 & memcmp
+**sub_13E7** 실행 후 MD5의 표준 초기값 4개가 각각 알수없는 숫자로 바뀌어 있는것을 확인했습니다.
 
-
-
-
-
-
-
-### 2.2. Assembly to Python (핵심)
-- C언어로 작성된 sub_1289 함수의 핵심 비트 연산 로직을 Python으로 재구성하면 다음과 같음
-
-**[Reconstructed Python Code]**
-```python
-# 입력 3바이트 -> 출력 4바이트 변환 로직
-# C언어의 포인터 연산을 배열 인덱싱으로 변환
-
-idx1 = in_chunk[0] >> 2
-idx2 = ((in_chunk[1] >> 4) | (16 * in_chunk[0]) & 0x30)
-idx3 = ((in_chunk[2] >> 6) | (4 * in_chunk[1]) & 0x3C)
-idx4 = in_chunk[2] & 0x3F
-
-# 위 인덱스를 이용해 table에서 값을 가져옴
-out[0] = table[idx1]
-out[1] = table[idx2]
-out[2] = table[idx3]
-out[3] = table[idx4]
+```bash
+pwndbg> x/88bx $rbp - 0x210
+0x7fffffffda90: 0xc0    0x01    0x00    0x00    0x00    0x00    0x00    0x00  
+0x7fffffffda98: 0x28    0xb6    0x62    0xd8    0x83    0xb6    0xd7    0x6f
+0x7fffffffdaa0: 0xd9    0x6e    0x4d    0xdc    0x5e    0x9b    0xa7    0x80
+0x7fffffffdaa8: 0x74    0x65    0x73
 ```
 
-## 3. Solution
-### 3.1. Recovering Table
-text_in.txt과 text_out.txt를 활용하여 테이블 byte_4040을 복구한
-
-- 핵심 아이디어: 인코딩 식을 역으로 이용하여, table[계산된_인덱스] = 암호문_문자 형태로 매핑
-
-- 주의점: 파일의 줄바꿈(\n)이나 패딩(=) 문자는 인덱스 계산을 어긋나게 하므로 전처리 과정에서 제거
-
-[make_table](./make_table.py) 파일을 참고하세요.
-
-### 3.2. Decode Flag (Bitwise Operation)
-복구된 테이블을 역참조(index())하고 비트연산을 통해 6bit x 4를 8bit x 3으로 만들어야함
-
-[Key Point: C vs Python] 
-- Python은 정수형의 크기 제한이 없으므로, 왼쪽 시프트(<<) 연산 시 상위 비트가 잘려나가지 않고 값이 계속 커짐
-  
-- 따라서 반드시 & 0xFF 등의 마스킹을 통해 불필요한 비트를 제거해줘야 함
-  
-**[Important Decoding Code]**
+직접 tes 문자열을 md5해보니 $rbp - 0x210에 저장된 값과 동일했습니다.
 ```python
-# val1~4는 테이블에서의 인덱스 값 (0~63)
+import hashlib
 
-# val1의 6비트 + val2의 상위 2비트
-b1 = (val1 << 2) | (val2 >> 4)
+buf="tes"
+print(hashlib.md5(buf.encode('utf-8')).hexdigest())
 
-# val2의 하위 4비트 + val3의 상위 4비트
-# val2 & 0x0F를 하지 않으면 앞쪽 비트 값이 남아서 값이 커짐
-b2 = ((val2 & 0x0F) << 4) | (val3 >> 2)
-
-# val3의 하위 2비트 + val4의 6비트
-b3 = ((val3 & 0x03) << 6) | val4
+result:28b662d883b6d76fd96e4ddc5e9ba780
 ```
+
+**memcmp**의 인수 **rdi**, **rsi**값을 확인했습니다.
+```bash
+pwndbg> x/2gx $rdi
+0x7fffffffdae8: 0x6fd7b683d862b628      0x80a79b5edc4d6ed9 #메모리에 little-endian으로 저장되어있었으니 꺼낼때는 반대로
+
+pwndbg> x/2gx $rsi
+0x7fffffffdb00: 0xfe5d3a093968d02b      0xba0aa367c2862eae
+```
+
+**[Encoding result]**: input을 세글자씩 md5한값과 part[i*2],part[i*2+1]을 합친값을 비교하고있습니다.
+```Encoding Logic
+for i in range(9):
+    part1=part[i*2]
+    part2=part[i*2+1]
+    cmp_str=part1+part2
+    memcmp(MD5(input[3*i:3*i+2]),cmp_str)
+```
+
+## 4. Solution
+- memcmp 함수가 호출되는 시점의 두 번째 인자($rsi)에서 비교 대상이 되는 해시 데이터를 추출했습니다.
+- 메모리에서 추출한 값은 **리틀 엔디언(Little Endian)** 으로 저장되어 있으므로, Python의 struct 모듈을 사용하여 이를 정상적인 바이트 배열로 복원했습니다.
+- 복원한 해시값과 일치하는 원본 문자열을 찾기 위해, hashlib과 itertools를 사용하여 가능한 모든 문자열 조합을 brute-force 공격했습니다.
 
 ### Full Solver Code
 [solution](./solution.py) 파일을 참고하세요.
 
 ## 4. Result
-플래그 추출 성공: DH{Did you know how base64 works}
+플래그 추출 성공: DH{m-d-5_1s_vu1n-er-4b1e~!}
 
 ![Success Screenshot](./flag_success.png)
 
 ## 5. Thoughts
-두번째 레벨 3 문제를 풀었다. table 복구는 생각보다 수월했지만 가장 기본적인 파이썬에서의 정수형을 생각하지않고 계산해서 
-복호화 과정에서 오래걸렸다. 레벨이 올라오면서 기술이 필요하다기보다는 누가 기본이 가장 잘 되어있는지를 보는것같다.
-항상 기초부터 차근차근 생각해야겠다.
+레벨 3 문제들은 핵심 개념을 모르면 못 푼다. 저번에 풀었던 base64문제도 그렇고 문제 안에서 암호화 알고리즘을 발견해서
+그 암호화 알고리즘의 복호화를 공부하던 어떻게 해결하는지를 따로 공부하고 문제를 풀어야해서 시간이 오래걸렸지만
+동적디버깅을 주로해서 푼 문제가 이번이 처음이어서 동적디버깅 실력이 많이 늘었다.
 
 
 
