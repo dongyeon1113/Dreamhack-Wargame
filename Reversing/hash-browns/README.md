@@ -82,7 +82,7 @@ pwndbg> x/2gx $rsi
 ```
 
 **[Encoding result]**: input을 세글자씩 md5한값과 part[i*2],part[i*2+1]을 합친값을 비교하고있습니다.
-```Encoding Logic
+```python
 for i in range(9):
     part1=part[i*2]
     part2=part[i*2+1]
