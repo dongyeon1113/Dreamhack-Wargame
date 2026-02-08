@@ -8,130 +8,131 @@
 
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Main Logic Finding 
-
+메인 로직을 디컴파일하면 program.bin에서 2바이트씩 읽어와 v3(Opcode)와 v6(Value) 쌍으로 명령을 수행하는 구조를 확인할 수 있습니다.
 ```C
-  for ( i = 0; ; i += 2 )
-  {
-    result = i;
-    if ( (int)i >= a2 )
-      break;
-    v6 = *(_BYTE *)((int)i + 1LL + a1);
-    v3 = *(unsigned __int8 *)((int)i + a1);
-    if ( v3 == 4 )
-    {
-      printf("Insert your string: ");
-      fgets(a3, 256, stdin);
-      a3[strcspn(a3, "\n")] = 0;
-      v7 = strlen(a3);
+  // 메인 루프 요약
+for ( i = 0; ; i += 2 )
+{
+    // ... 생략 ...
+    v6 = *(_BYTE *)((int)i + 1LL + a1);       // Value (연산에 쓰일 값)
+    v3 = *(unsigned __int8 *)((int)i + a1);   // Opcode (연산 종류)
+
+    if ( v3 == 4 ) { // 사용자 입력 
+        printf("Insert your string: ");
+        fgets(a3, 256, stdin);
+        v7 = strlen(a3);
     }
-    else
-    {
-      if ( *(unsigned __int8 *)((int)i + a1) > 4u )
-        goto LABEL_12;
-      switch ( v3 )
-      {
-        case 3:
-          sub_1301(sub_12C2, v6, a3, v7);
-          break;
-        case 1:
-          sub_1301(sub_1289, v6, a3, v7);
-          break;
-        case 2:
-          sub_1301(sub_12A7, v6, a3, v7);
-          break;
-        default:
-LABEL_12:
-          puts("Error!");
-          exit(1);
-      }
+    else {
+        switch ( v3 ) {
+            case 3: sub_1301(sub_12C2, v6, a3, v7); break; // ROR
+            case 1: sub_1301(sub_1289, v6, a3, v7); break; // XOR
+            case 2: sub_1301(sub_12A7, v6, a3, v7); break; // ADD
+        }
     }
-  }
-  return result;
+}
 ```
+### 2.2. Handler Functions
+sub_1301 함수는 일종의 Dispatcher 역할을 하며, 인자로 전달된 하위 함수(sub_12C2, sub_1289, sub_12A7)를 호출하여 모든 입력 문자열(a3)에 대해 1바이트씩 연산을 적용합니다.
 
-**buf**배열에 문자열을 입력받아 세 함수(sub_1209,sub_125C,sub_13E7)를 실행하며 memcmp를 통해서 문자열을 비교하고있습니다.
+각 서브 함수의 로직은 다음과 같습니다:
+- sub_12C2: (a1 >> a2) | (a1 << (8 - a2)) 형태의 Bitwise Rotate Right(ROR) 연산 수행.
 
-linux 동적 디버거 pwndbg로 v6값 즉 **[rbp - 0x210]** 에 위치하는값을 확인해보았습니다. 
+- sub_1289: 두 값을 더하는 Addition 연산 수행.
 
-## 3. Dynamic Analysis (동적 분석)
-### 3.1. MD5 constant value finding 
-**sub_1209** 실행 후 MD5의 표준 초기값 4개를 **[rbp - 0x210]** 에 저장하는것을 확인했습니다.
+- sub_12A7: 두 값을 XOR 하는 Exclusive OR 연산 수행.
 
-x64 아키텍처는 데이터를 메모리에 저장할 때 리틀엔디언으로 저장합니다.
-
-```bash
-pwndbg> x/88bx $rbp - 0x210
-0x7fffffffda90: 0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00
-0x7fffffffda98: 0x01    0x23    0x45    0x67    0x89    0xab    0xcd    0xef
-0x7fffffffdaa0: 0xfe    0xdc    0xba    0x98    0x76    0x54    0x32    0x10
-```
-
-> - A: `0x67452301`
-> - B: `0xEFCDAB89`
-> - C: `0x98BADCFE`
-> - D: `0x10325476`
-
-이를 통해 변조되지 않은 **Standard MD5** 알고리즘임을 확인했습니다.
-
-### 3.2. Input value finding
-**sub_125C** 실행 후 입력했던 문자열 **testtest** 중 **tes**까지 **[rbp - 0x210]** 에 저장하는것을 확인했습니다.
-
-```bash
-pwndbg> x/88bx $rbp - 0x210
-0x7fffffffda90: 0x18    0x00    0x00    0x00    0x00    0x00    0x00    0x00
-0x7fffffffda98: 0x01    0x23    0x45    0x67    0x89    0xab    0xcd    0xef
-0x7fffffffdaa0: 0xfe    0xdc    0xba    0x98    0x76    0x54    0x32    0x10
-0x7fffffffdaa8: 0x74    0x65    0x73
-
-**문자열 tes를 각각 ascii hex값으로 변환하면 0x74, 0x65, 0x73이다.
-```
-
-### 3.3. MD5 & memcmp
-**sub_13E7** 실행 후 MD5의 표준 초기값 4개가 각각 알수없는 숫자로 바뀌어 있는것을 확인했습니다.
-
-```bash
-pwndbg> x/88bx $rbp - 0x210
-0x7fffffffda90: 0xc0    0x01    0x00    0x00    0x00    0x00    0x00    0x00  
-0x7fffffffda98: 0x28    0xb6    0x62    0xd8    0x83    0xb6    0xd7    0x6f
-0x7fffffffdaa0: 0xd9    0x6e    0x4d    0xdc    0x5e    0x9b    0xa7    0x80
-0x7fffffffdaa8: 0x74    0x65    0x73
-```
-
-직접 tes 문자열을 md5해보니 $rbp - 0x210에 저장된 값과 동일했습니다.
+## 2.3. Reconstructing Encryption Logic 
+위 내용들을 전부 합쳐서 암호화 로직을 python으로 재구성했습니다.
 ```python
-import hashlib
+def encrypt_ror(val, data, length):
+    shift = val & 7
+    for i in range(length):
+        # 데이터를 오른쪽으로 회전 (8비트 기준)
+        data[i] = ((data[i] >> shift) | (data[i] << (8 - shift))) & 0xFF
 
-buf="tes"
-print(hashlib.md5(buf.encode('utf-8')).hexdigest())
 
-result:28b662d883b6d76fd96e4ddc5e9ba780
+def encrypt_add(val, data, length):
+    for i in range(length):
+        # 특정 값을 더함 (Overflow 방지를 위해 0xFF 마스킹)
+        data[i] = (data[i] + val) & 0xFF
+
+def encrypt_xor(val, data, length):
+    for i in range(length):
+        # 특정 값과 XOR 연산
+        data[i] = (data[i] ^ val) & 0xFF
+
+# a1: program.bin 데이터, a3: Input, v7: Input 길이
+for i in range(2, 0x202, 2):
+    opcode = a1[i]      # v3: 연산 종류
+    value = a1[i + 1]   # v6: 연산에 사용될 value
+
+    if opcode == 3:
+        encrypt_ror(value, a3, v7)
+    elif opcode == 2:
+        encrypt_add(value, a3, v7)
+    elif opcode == 1:
+        encrypt_xor(value, a3, v7)
+
+
 ```
 
-**memcmp**의 인수 **rdi**, **rsi**값을 확인했습니다.
-```bash
-pwndbg> x/2gx $rdi
-0x7fffffffdae8: 0x6fd7b683d862b628      0x80a79b5edc4d6ed9 #메모리에 little-endian으로 저장되어있었으니 꺼낼때는 반대로
 
-pwndbg> x/2gx $rsi
-0x7fffffffdb00: 0xfe5d3a093968d02b      0xba0aa367c2862eae
-```
 
-**[Encoding result]**: input을 세글자씩 md5한값과 part[i*2],part[i*2+1]을 합친값을 비교하고있습니다.
-```python
-for i in range(9):
-    part1=part[i*2]
-    part2=part[i*2+1]
-    cmp_str=part1+part2
-    memcmp(MD5(input[3*i:3*i+2]),cmp_str)
-```
+## 3. Solution
+암호화 로직이 program.bin의 명령을 순차적으로 적용하는 방식이므로 복호화를 위해서는 다음 두 가지 핵심 원칙을 적용해야 합니다.
 
-## 4. Solution
-- memcmp 함수가 호출되는 시점의 두 번째 인자($rsi)에서 비교 대상이 되는 해시 데이터를 추출했습니다.
-- 메모리에서 추출한 값은 **리틀 엔디언(Little Endian)** 으로 저장되어 있으므로, Python의 struct 모듈을 사용하여 이를 정상적인 바이트 배열로 복원했습니다.
-- 복원한 해시값과 일치하는 원본 문자열을 찾기 위해, hashlib과 itertools를 사용하여 가능한 모든 문자열 조합을 brute-force 공격했습니다.
+연산의 역순: program.bin의 마지막 명령부터 처음 방향으로 거꾸로 거슬러 올라가며 연산합니다. (range의 역순 처리)
+
+역연산 적용:
+
+- ADD의 역연산: SUBTRACT (파이썬에서는 - val & 0xFF)
+
+- ROR의 역연산: ROL (왼쪽 회전)
+
+- XOR의 역연산: XOR (자기 자신과 다시 XOR)
 
 ### Full Solver Code
-[solution](./solution.py) 파일을 참고하세요.
+```python
+with open("output.bin", "rb") as f:
+    a3 = bytearray(f.read())
+with open("program.bin", "rb") as f:
+    a1 = bytearray(f.read())
+
+a1 = a1[2:] # 앞의 헤더 2바이트 제거
+
+def sub_12C2(v3, a3, v7): # Rotate Left
+    n = v3 & 7
+    for i in range(v7):
+        a3[i] = ((a3[i] << n) & 0xFF) | (a3[i] >> (8 - n))
+
+def sub_1289(v3, a3, v7): # Subtract
+    for i in range(v7):
+        a3[i] = (a3[i] - v3) & 0xFF
+
+def sub_12A7(v3, a3, v7): # XOR
+    for i in range(v7):
+        a3[i] = (a3[i] ^ v3) & 0xFF
+
+v7 = len(a3)
+
+# 인덱스를 뒤에서부터 2칸씩 점프하며 가져옴
+for i in range(len(a1) - 2, -1, -2):
+    v6 = a1[i]      # 명령 (1, 2, 3)
+    v3 = a1[i + 1]  # 연산에 쓸 값
+    
+    if v6 == 3:
+        sub_12C2(v3, a3, v7)
+    elif v6 == 1:
+        sub_1289(v3, a3, v7)
+    elif v6 == 2:
+        sub_12A7(v3, a3, v7)
+
+# 결과 출력
+for i in range(v7):
+    print(chr(a3[i]), end='')
+```
+
+
 
 ## 4. Result
 플래그 추출 성공: DH{4DD_X0R_R07473_34S1LY_R3V3RS1BL3}
@@ -139,7 +140,8 @@ for i in range(9):
 ![Success Screenshot](./flag_success.png)
 
 ## 5. Thoughts
-
+레벨3 문제를 풀다가 너무 막혀서 다시 내 실력이 부족하다고 여기고 레벨2로 돌아왔다. 아직 레벨2도 좀 시간이 걸리는것을 보니
+레벨3으로 넘어갈때가 아닌가보다. 조금 더 역연산 구현과 코딩연습을 하고 넘어가야겠다.
 
 
 
