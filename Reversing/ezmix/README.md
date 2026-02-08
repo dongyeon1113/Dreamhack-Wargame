@@ -9,8 +9,7 @@
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Main Logic Finding 
 
-```assembly
- v7 = 0;
+```C
   for ( i = 0; ; i += 2 )
   {
     result = i;
