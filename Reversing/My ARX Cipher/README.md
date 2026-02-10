@@ -136,121 +136,98 @@ a1은 12바이트의 키 값을 담고 있고, a2는 평문을 담고 있습니�
 for 문 안의 내용을 요약해보았습니다.
 
 ```python
-for j in range(3):
-        key_chunk = key_data[4*j:4*j+2]
-        key1=int.from_bytes(key_chunk, 'little')
-        key_chunk = key_data[4*j+2:4*j+4]
-        key2=int.from_bytes(key_chunk, 'little')
-        
-        v5 = key1 ^ (v4 + ((v3 << 7) | (v3 >> 9)))
-        v3 = (key2 ^ ((v4 << 7) | (v4 >> 9)))& 0xFFFF
-        
-        v4 = v5& 0xFFFF
+v5 = key1 ^ (v4 + ((v3 << 7) | (v3 >> 9))) #ROL 7
+v3 = (key2 ^ ((v4 << 7) | (v4 >> 9)))& 0xFFFF 
+v4 = v5& 0xFFFF
 ```
 
 python으로 재구성한 암호화 코드입니다.
+
 [Encrypt Code](./encrypt.py)
 
 
-## 2.3. Reconstructing Encryption Logic 
-위 내용들을 전부 합쳐서 암호화 로직을 python으로 재구성했습니다.
+## 3. Solution
+위에서 요약한 각 연산들은 역연산이 가능합니다.
+
 ```python
-def encrypt_ror(val, data, length):
-    shift = val & 7
-    for i in range(length):
-        # 데이터를 오른쪽으로 회전 (8비트 기준)
-        data[i] = ((data[i] >> shift) | (data[i] << (8 - shift))) & 0xFF
-
-
-def encrypt_add(val, data, length):
-    for i in range(length):
-        # 특정 값을 더함 (Overflow 방지를 위해 0xFF 마스킹)
-        data[i] = (data[i] + val) & 0xFF
-
-def encrypt_xor(val, data, length):
-    for i in range(length):
-        # 특정 값과 XOR 연산
-        data[i] = (data[i] ^ val) & 0xFF
-
-# a1: program.bin 데이터, a3: Input, v7: Input 길이
-for i in range(2, 0x202, 2):
-    opcode = a1[i]      # v3: 연산 종류
-    value = a1[i + 1]   # v6: 연산에 사용될 value
-
-    if opcode == 3:
-        encrypt_ror(value, a3, v7)
-    elif opcode == 2:
-        encrypt_add(value, a3, v7)
-    elif opcode == 1:
-        encrypt_xor(value, a3, v7)
-
-
+prev_v4 = ROR(v3 ^ key2,7)
+temp = (v4^key1)&0xFFFF
+diff = (temp - prev_v4) & 0xFFFF
+prev_v3 = ROR(diff,7)
+v3 = prev_v3
+v4 = prev_v4
 ```
 
-
-
-## 3. Solution
-암호화 로직이 program.bin의 명령을 순차적으로 적용하는 방식이므로 복호화를 위해서는 다음 두 가지 핵심 원칙을 적용해야 합니다.
-
-연산의 역순: program.bin의 마지막 명령부터 처음 방향으로 거꾸로 거슬러 올라가며 연산합니다. (range의 역순 처리)
-
-역연산 적용:
-
-- ADD의 역연산: SUBTRACT (파이썬에서는 - val & 0xFF)
-
-- ROR의 역연산: ROL (왼쪽 회전)
-
-- XOR의 역연산: XOR (자기 자신과 다시 XOR)
-
+다음은 전체 복호화 코드입니다.
 ### Full Solver Code
 ```python
-with open("output.bin", "rb") as f:
-    a3 = bytearray(f.read())
-with open("program.bin", "rb") as f:
-    a1 = bytearray(f.read())
+# key 파일을 바이너리 읽기 모드로 열어 바이트 배열로 저장
+with open("key", "rb") as f:
+    key_data = bytearray(f.read())
 
-a1 = a1[2:] # 앞의 헤더 2바이트 제거
+# 암호화된 파일(flag.enc)을 바이너리 읽기 모드로 열어 저장
+with open("flag.enc", "rb") as f:
+    flag_data = bytearray(f.read())
 
-def sub_12C2(v3, a3, v7): # Rotate Left
-    n = v3 & 7
-    for i in range(v7):
-        a3[i] = ((a3[i] << n) & 0xFF) | (a3[i] >> (8 - n))
+# 복호화된 데이터를 담을 빈 배열 생성 (암호화 데이터와 동일한 크기)
+decrypted_data = bytearray(len(flag_data))
 
-def sub_1289(v3, a3, v7): # Subtract
-    for i in range(v7):
-        a3[i] = (a3[i] - v3) & 0xFF
+def ROR(val, n):
+    """
+    16비트 정수 기준 오른쪽 순환 이동(Rotate Right) 함수
+    val: 값, n: 이동할 비트 수
+    """
+    max_bits = 16
+    return ((val >> n) | (val << (16 - n))) & 0xFFFF
 
-def sub_12A7(v3, a3, v7): # XOR
-    for i in range(v7):
-        a3[i] = (a3[i] ^ v3) & 0xFF
-
-v7 = len(a3)
-
-# 인덱스를 뒤에서부터 2칸씩 점프하며 가져옴
-for i in range(len(a1) - 2, -1, -2):
-    v6 = a1[i]      # 명령 (1, 2, 3)
-    v3 = a1[i + 1]  # 연산에 쓸 값
+# 데이터를 4바이트씩 묶어서 처리 (Block 단위 복호화)
+for i in range(0, len(flag_data), 4):
     
-    if v6 == 3:
-        sub_12C2(v3, a3, v7)
-    elif v6 == 1:
-        sub_1289(v3, a3, v7)
-    elif v6 == 2:
-        sub_12A7(v3, a3, v7)
+    # 1. 암호화된 데이터의 앞 2바이트를 읽어 v3(16비트 정수)로 변환
+    chunk = flag_data[i : i+2]  
+    v3 = int.from_bytes(chunk, 'little')
 
-# 결과 출력
-for i in range(v7):
-    print(chr(a3[i]), end='')
+    # 2. 암호화된 데이터의 뒤 2바이트를 읽어 v4(16비트 정수)로 변환
+    chunk = flag_data[i+2 : i+4]  
+    v4 = int.from_bytes(chunk, 'little')
+
+    # 암호화 과정의 역순으로 3회 반복 (복호화 라운드)
+    for j in range(3):
+        # 키 데이터를 역순(2 -> 1 -> 0)으로 가져와서 사용
+        key_chunk = key_data[4*(2-j):4*(2-j)+2]
+        key1 = int.from_bytes(key_chunk, 'little')
+        
+        key_chunk = key_data[4*(2-j)+2:4*(2-j)+4]
+        key2 = int.from_bytes(key_chunk, 'little')
+
+        # --- 복호화 연산 시작 ---
+        
+        # 1) 현재 v3와 key2를 XOR한 후 7비트 ROR하여 이전 단계의 v4를 복구
+        prev_v4 = ROR(v3 ^ key2, 7)
+        
+        # 2) v4와 key1을 XOR 연산
+        temp = (v4 ^ key1) & 0xFFFF
+        
+        # 3) XOR 결과값에서 복구된 prev_v4를 빼서 차이값을 구함
+        diff = (temp - prev_v4) & 0xFFFF
+        
+        # 4) 차이값을 7비트 ROR하여 이전 단계의 v3를 복구
+        prev_v3 = ROR(diff, 7)
+        
+        # 다음 라운드 계산을 위해 v3, v4 업데이트
+        v3 = prev_v3
+        v4 = prev_v4
+
+    # 복호화된 16비트 정수들을 다시 바이트(2바이트씩)로 변환하여 결과 배열에 저장
+    decrypted_data[i : i+2] = v3.to_bytes(2, 'little')
+    decrypted_data[i+2 : i+4] = v4.to_bytes(2, 'little')
+
+# 최종 복호화된 바이트 배열을 문자로 변환하여 화면에 출력
+for i in range(0, len(decrypted_data)):
+    print(chr(decrypted_data[i]), end='')
 ```
 
-
-
-## 4. Result
-플래그 추출 성공: DH{4DD_X0R_R07473_34S1LY_R3V3RS1BL3}
-
-![Success Screenshot](./flag_success.png)
-
-## 5. Thoughts
+## 4. Thoughts
 레벨3 문제를 풀다가 너무 막혀서 다시 내 실력이 부족하다고 여기고 레벨2로 돌아왔다. 아직 레벨2도 좀 시간이 걸리는것을 보니
 레벨3으로 넘어갈때가 아닌가보다. 조금 더 역연산 구현과 코딩연습을 하고 넘어가야겠다.
 
