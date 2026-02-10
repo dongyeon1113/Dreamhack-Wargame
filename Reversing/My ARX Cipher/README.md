@@ -147,7 +147,10 @@ for j in range(3):
         
         v4 = v5& 0xFFFF
 ```
+
+python으로 재구성한 암호화 코드입니다.
 [Encrypt Code](./encrypt.py)
+
 
 ## 2.3. Reconstructing Encryption Logic 
 위 내용들을 전부 합쳐서 암호화 로직을 python으로 재구성했습니다.
