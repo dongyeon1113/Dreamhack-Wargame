@@ -9,25 +9,25 @@
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Initial Analysis
 문제 파일인 flag.exe를 실행해보니, 아래 이미지와 같이 플래그가 있어야 할 위치가 검은색 선들로 덧칠된 것처럼 가려져 있었습니다.
-이 현상을 관찰하고, **플래그 위에 덧칠하는 함수가 반복적으로 호출되고 있을 것이다**이라는 초기 가설을 세웠습니다.
+
+그래서 **플래그 위에 덧칠하는 함수가 반복적으로 호출되고 있을 것이다**이라는 초기 가설을 세웠습니다.
 
 ![initialrun](./initialrun.png)
 
-가설을 검증하기 위해 IDA로 파일을 열어 정적 분석을 시작했습니다. 
-프로그램이 어떤 기능을 사용하는지 파악하고자 Strings 탭을 확인한 결과, 다수의 Win32 API 함수들이 사용된 것을 볼 수 있었습니다.
-함수 목록 중에서 저는 특히 **GdipDrawLine** 이라는 함수에 주목했습니다.
-**GdipDrawLine**함수는 **두 점을 잇는 직선**을 그리는 함수로 연속해서 호출한다면 문제처럼 마구 칠해서 가리는 용도로 쓸 수 있을거라 판단했습니다.
+IDA를 활용한 정적 분석 중 Strings 탭에서 다수의 Win32 API를 확인하였으며, 그중 직선을 그리는 GdipDrawLine 함수에 주목했습니다. 
+
+해당 함수가 연속적으로 호출되며 문제의 데이터를 의도적으로 덧칠해 가리는 용도로 사용되었을 것이라고 생각했습니다.
 
 Reference: **win32api는 프로그램이 윈도우 운영체제(OS)에게 특정 작업(화면 출력, 창 제어, 파일 읽기 등)을 요청할 때 사용하는 공식 함수 인터페이스입니다.**
 
 ![FunctionList](./functionlist.png)
 
 ### 2.2. Main Logic Finding & Solution
-**GdipDrawLine** 함수를 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
+**GdipDrawLine** 함수를 Cross Reference (Xref) 하여 덧칠하는 용도로 추정되는 함수(**sub_7FF68E8D2B80**)를 발견했습니다.
 
 ![sub_7FF68E8D2B80](./sub_7FF68E8D2B80.png)
 
-핵심 로직은 다음과 같습니다. 아래 그림을 보면 **sub_7FF68E8D2B80**함수가 반복적으로 호출되는것을 볼 수 있습니다.
+아래 그림을 보면 **sub_7FF68E8D2B80**함수가 반복적으로 호출되는것을 볼 수 있습니다.
 
 ![RepeatedFunctionCall](./RepeatedFunctionCall.png)
 
@@ -40,7 +40,10 @@ Reference: **win32api는 프로그램이 윈도우 운영체제(OS)에게 특정
 
 ![debug](./debug.png)
 
-문제를 해결하기 위해 해당 **sub_7FF68E8D2B80** 호출을 무력화하기로 결정했습니다. **sub_7FF68E8D2B80** 명령어는 총 5 Byte의 크기를 가집니다. 
+문제를 해결하기 위해 해당 **sub_7FF68E8D2B80** 호출을 무력화했습니다.
+
+**sub_7FF68E8D2B80** 명령어는 총 5 Byte의 크기를 가집니다. 
+
 따라서 아무런 동작을 하지 않는 1 Byte 명령어인 NOP을 5번 입력하여, 원본 프로그램의 구조를 해치지 않고 해당 함수 호출부만 패치했습니다.
 
 ![nop](./nop.png)
