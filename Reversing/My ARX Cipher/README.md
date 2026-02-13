@@ -4,7 +4,7 @@
 - **Category:** Reversing
 - **Difficulty:** Level 3
 - **Tool:** IDA Free, VS Code (Python)
-- **Description:** 주어진 key를 바탕으로 평문파일을 암호화 하는 문
+- **Description:** 주어진 key를 바탕으로 평문파일을 암호화 하는 문제
 
 ## 2. Static Analysis (정적 분석)
 ### 2.1. Main Logic Finding 
@@ -101,7 +101,7 @@ __int64 __fastcall sub_1381(__int64 a1, const char *a2, const char *a3)
 }
 
 ```
-stream은 평문 파일(input)에 대한 디스크립터 v6은 암호문을 담을 파일임을 알 수 있습니다.
+stream은 평문 파일(input)에 대한 디스크립터, v6은 암호문을 담을 파일임을 알 수 있습니다.
 
 fread를 통해 평문 파일로부터 4바이트씩 읽어와 sub_129F를 거친 후 fwrite를 통해 이 s 값을 암호문 파일에 적는 것을 알 수 있었습니다.
 
