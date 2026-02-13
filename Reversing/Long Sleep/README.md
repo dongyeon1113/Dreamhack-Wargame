@@ -37,6 +37,7 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 ![idaanalysis](./nanosleep.png)
 
 **nanosleep**이 프로그램을 멈추는 핵심함수라고 판단하여 **nanosleep**을 호출하는 **syscall**을 nop으로 패치했습니다.
+
 패치방법: **syscall**이 2byte짜리 명령어여서 **nop**(1byte)을 **syscall**이 시작하는 주소에 두 번 넣어줬음
 
 ![idaanalysis](./nanosleeppatch.png)
