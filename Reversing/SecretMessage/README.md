@@ -24,12 +24,13 @@ Reference: DIE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 
 다운로드 받은 폴더에는 prob 리눅스 파일 뿐 아니라 **secretMessage.enc**파일과 **imageviewer.py**파일이 있었습니다.
 
-**secretMessage.enc**파일은 알 수 없는 문자들로 암호회되어 있는것을 볼 수 있었습니다.
+**secretMessage.enc**파일은 알 수 없는 문자들로 암호화되어 있는것을 볼 수 있었습니다.
 
 ![secretMessage.enc](./secretMessage.png)
 
 **imageviewer.py**파일은 **secretMessage.raw**파일을 받아와서 이미지로 띄우는 역할을 합니다.
-구해야하는건 암호화 하기 전 파일인 **secretMessage.raw**입니다.
+
+**secretMessage.raw**파일을 복구해야합니다.
 
 ![imageviewer](./imageviewer.png)
 
@@ -160,8 +161,7 @@ locret_90F:
     sub_7FA endp
 ```
 
-이런 과정들이 있어도 가장 중요한것은 결론입니다.
-이해하기 쉽게 다이어그램으로 만들어보았습니다.
+위 어셈블리어 분석을 바탕으로 암호화 과정을 요약해보았습니다.
 
 ## Encoding Logic
 
@@ -199,7 +199,8 @@ Output:    aa         bbb        cccc       d      f
 
 [문자] == [이전 문자] → 압축 구간 해당 문자를 **다음 바이트 값**만큼 추가로 출력하고, 인덱스를 2칸 건너뜁니다.
 그 외의 경우는 그대로 출력합니다.
-예시:aa0 $\rightarrow$ aa (+0개 추가) bb1 $\rightarrow$ bbb (+1개 추가)
+
+example: aa0 $\rightarrow$ aa (+0개 추가) bb1 $\rightarrow$ bbb (+1개 추가)
 
 원본 파일을 복구하는 파이썬 코드는 다음과 같습니다.
 
@@ -213,7 +214,7 @@ Output:    aa         bbb        cccc       d      f
 암호화함수를 분석하고 복호화함수를 구현한다라는 전체적인 논리는 같지만 입력값이 아닌 raw, enc파일같이 
 생소한 개념이 나오니 문제가 더 어렵게 느껴졌다. 게다가 flag가 출력되는 개념이 아니라 사진으로 띄어지는형식이어서
 새로운 유형을 공부할 수 있어서 좋았다. 처음에 정적분석도 하지않고 pwndbg로 막 동적분석을 하다가 오히려 
-더 꼬이는 느낌이어서 정적분석부터 천천히 하니 답을 찾을 수 있었다. 항상 기초부터 차근차근
+더 꼬이는 느낌이어서 정적분석부터 천천히 하니 답을 찾을 수 있었다. 
 
 
 
