@@ -174,22 +174,26 @@ result=(flag[4*i]^n2)%n1
 
 
 ## Encoding Logic
-flag.txt를 4byte씩 잘라서 **RSA**알고리즘을 적용
+분석 결과 프로그램은 flag.txt의 원본 데이터를 읽어 들여 RSA 공개키 암호화 알고리즘을 적용한 뒤 out.bin 파일에 작성하는 구조를 가지고 있습니다.
 
-out=(flag^n2)%n1 
+데이터는 한 번에 처리되지 않고, 4-byte(Little-endian) 단위로 슬라이싱되어 정수형(Integer)으로 변환된 후 암호화 과정을 거칩니다.
 
-n2는 **public key**
+암호화 공식: $C = M^{n_2} \pmod{n_1}$
 
+$M$: 4바이트 단위의 평문 블록 (Message)
+
+$n_2$: RSA 공개 지수 (Public Exponent, $e$)
+
+$n_1$: 모듈러스 (Modulus, $N$)
+
+$C$: 암호화된 결과값 (Ciphertext)
 ```mermaid
 graph TD
-    Node1[" Input: 원본 플래그 (String)"]
-    Node2[" Process: 4바이트 단위 정수 변환 (Integer)"]
-    Node3{" Encrypt: RSA 암호화     (flag[4*i] ^ n2) % n1 "}
-    Node4[" Output: out.bin 파일 (Binary)"]
+    A["flag.txt (String)"] -- "4-byte Chunking" --> B["Little-endian Integer (M)"]
+    B -- "Modular Exponentiation" --> C{"Encryption Core: (M ^ n2) % n1"}
+    C -- "Append to Buffer" --> D["out.bin (Binary)"]
 
-    Node1 -->|슬라이싱| Node2
-    Node2 -->|계산| Node3
-    Node3 -->|저장| Node4
+   
 
   
 ```
@@ -198,30 +202,35 @@ graph TD
 암호화 로직을 바탕으로 복호화 로직도 다이어그램으로 만들었습니다.
 
 ## Decoding Logic
-RSA를 푸는 열쇠인 **d**는 **n1**을 두 소수(p, q)로 소인수분해 해야만 알 수 있는 **(p-1)(q-1)** 을 통해 만들어집니다.
+암호화된 out.bin을 복구하기 위해서는 개인키(Private Key)인 **$d$** 가 필요합니다. 
 
-d=inverse(n2,(p-1)*(q-1))
+이를 위해 모듈러스($n_1$)를 두 개의 소수($p, q$)로 분해하여 오일러 피 함수($phi$)를 구하는 과정을 거쳤습니다.
 
-flag=(out^d)%n1
+**private key(d) 연산 과정**
 
-d는 **private key**
+1, 소인수분해 (Factoring): $n_1 = p \times q$ 를 만족하는 두 소수를 찾아냅니다.
+
+2, 오일러 피 함수 계산: $\phi(n_1) = (p-1)(q-1)$
+
+3, 개인키 생성: 공개지수 $n_2$의 모듈러 역수를 구합니다.
+
+**복호화 공식**
+
+추출된 개인키 $d$를 사용하여 각 4바이트 블록을 평문으로 복원했습니다..
+
+**$$M = C^d \pmod{n_1}$$**
 
 ```mermaid
 graph TD
-    Node1[" Input: out.bin 파일 (Binary)"]
-    Node2[" Process: 8바이트 단위 정수 변환 (Little Endian)"]
-    Node3{" Decrypt: RSA 복호화      (out_data^ d) % n1 "}
-    Node4[" Output: 원본 플래그 (String)"]
+    A["out.bin (Ciphertext)"] -- "Read 4-byte Block (C)" --> B{"Decryption Core: (C ^ d) % n1"}
+    B -- "Integer to Little-endian" --> C["4-byte Chunk (M)"]
+    C -- "Concatenate" --> D["Recovered flag.txt (String)"]
 
-    Node1 -->|8바이트 읽기| Node2
-    Node2 -->|계산| Node3
-    Node3 -->|문자열 변환| Node4
+    
 ```
 
 ## 3. Solution (풀이 과정)
-위 다이어그램을 바탕으로 solvercode를 짰습니다.
-
-flag.txt를 복구하는 파이썬 코드는 다음과 같습니다.
+앞서 분석한 복호화 로직을 바탕으로 out.bin에서 원본 플래그를 추출하는 파이썬 스크립트를 작성했습니다.
 
 ### Full Solver Code
 [solution](./solution.py) 파일을 참고하세요.
