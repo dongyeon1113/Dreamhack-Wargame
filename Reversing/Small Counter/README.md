@@ -20,7 +20,7 @@ Reference: DiE는 실행 파일의 컴파일러, 패커, 파일 형식 등을 �
 ![LINUX Analysis](./ubuntuanalysis.png)
 
 ### 2.2. Main Logic Finding & Solution
-**Great xD 1 year has passed! The flag is ...** 라는 성공 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
+**---Counter---** 라는 문자열을 Cross Reference (Xref) 하여 메인 로직이 위치한 함수를 찾았습니다.
 
 핵심 로직은 다음과 같습니다
 프로그램은 counter(var_4)에 따라 두 가지 경로로 플래그를 생성하는 구조를 가지고 있습니다.
