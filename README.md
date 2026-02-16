@@ -7,7 +7,7 @@
 
 ---
 
-##  Analysis Approach: "No Decompiler"
+##  Analysis Approach
 
 분석 시 디컴파일러(`F5`)에 의존하기보다, 최대한 **어셈블리 단계에서 분석**하며 기본기를 다지는 연습을 하고 있습니다.
 
