@@ -1,27 +1,26 @@
 #  Dreamhack Wargame Write-ups
 
-**리버싱 공부 기록**
+**리버싱 기초 체력 단련 기록**
 
-이 저장소는 Dreamhack 워게임 문제들을 해결하며 작성한 **분석 보고서 및 소스 코드**를 포함합니다.
-단순히 정답(Flag)을 얻는 것이 아니라, 바이너리의 동작 원리를 가장 낮은 단계(Low-Level)에서 이해하는 과정을 기록했습니다.
+이 저장소는 Dreamhack 워게임 문제들을 해결하며 작성한 **분석 보고서 및 솔버(Solver)** 를 담고 있습니다.  
+단순히 Flag를 얻는 것에 그치지 않고 바이너리의 동작 원리를 **Low-Level** 단계에서 완전히 이해하는 과정을 기록합니다.
 
 ---
 
-##  Analysis Methodology
+##  Analysis Approach: "No Decompiler"
 
-### No Decompiler Policy
-본 프로젝트의 모든 결과물은 **디컴파일러(F5)의 의사 코드(Pseudo-code)를 참고하지 않고 작성**되었습니다. 
+분석 시 디컴파일러(`F5`)에 의존하기보다, 최대한 **어셈블리 단계에서 분석**하며 기본기를 다지는 연습을 하고 있습니다.
 
-1.  **Static Analysis (정적 분석)**
-    * IDA Graph View와 Disassembly Text만을 사용하여 제어 흐름(Control Flow)을 파악합니다.
-    * 레지스터(`rax`, `rbx`...)의 상태 변화와 스택 프레임(`rsp`, `rbp`) 관리를 추적합니다.
+### 1. Static Analysis (정적 분석)
+* **Control Flow 파악:** IDA Graph View와 Disassembly Text만으로 프로그램의 전체 흐름을 읽습니다.
+* **Stack & Register 추적:** 레지스터의 상태 변화와 스택 프레임의 움직임을 직접 보고 확인합니다.
 
-2.  **Logic Reconstruction (논리 재구성)**
-    * 분석한 어셈블리 명령어를 기반으로, 원본 C 소스 코드의 로직을 **1:1로 수동 복원**합니다.
-    * 이 과정에서 컴파일러의 최적화 패턴, 변수 타입, 구조체 형태를 역추론합니다.
+### 2. Logic Reconstruction (C, python복원)
+* **1:1 수동 복원:** 분석한 기계어 논리를 바탕으로 원본 C, python 코드를 직접 재구성합니다.
 
-3.  **Inverse Operation (역연산 구현)**
-    * 복원된 알고리즘의 수학적 특성을 파악하여, 암호화된 데이터를 복구하는 **Keygen/Solver**를 직접 구현합니다.
+### 3. Solver Implementation (역연산)
+* **Algorithm Analysis:** 복원된 알고리즘의 수학적 특성을 파악합니다.
+* **solver code 구현:** 암호화된 데이터를 복구하거나 플래그를 추출하는 **Solver** 코드를 직접 작성합니다.
 
 ---
 
